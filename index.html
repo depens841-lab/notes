@@ -6,6 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>Screen Off</title>
   <style>
     * {
@@ -1893,10 +1896,28 @@
       }
     }
 
+    // Полноэкранный режим (прячет адресную строку и все рамки браузера)
+    function enterFullscreen() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen().catch(() => {});
+      }
+    }
+
+    // Регистрация Service Worker для полноценной установки приложения в Chrome
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
+        console.log('SW reg error:', err);
+      });
+    }
+
     // Старт
     startBtn.addEventListener('click', () => {
       startOverlay.style.display = 'none';
       shouldBeListening = true;
+      enterFullscreen();
       initSpeech();
       try {
         recognition.start();
@@ -1905,6 +1926,13 @@
       }
       applyConfig();
       requestWakeLock();
+    });
+
+    // При тапе по черному экрану, если случайно вышли из полного экрана - возвращаем
+    container.addEventListener('touchend', () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        enterFullscreen();
+      }
     });
 
     document.addEventListener('visibilitychange', () => {
