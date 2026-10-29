@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <title>Screen Off</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      color: #383838;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Главный стелс-контейнер - абсолютно черный */
+    #stealth-container {
+      position: absolute;
+      inset: 0;
+      background: #000000;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    /* Позиционирование вывода подсказок */
+    .pos-bottom-right { justify-content: flex-end; align-items: flex-end; text-align: right; }
+    .pos-bottom-left  { justify-content: flex-end; align-items: flex-start; text-align: left; }
+    .pos-top-right    { justify-content: flex-start; align-items: flex-end; text-align: right; }
+    .pos-top-left     { justify-content: flex-start; align-items: flex-start; text-align: left; }
+    .pos-center       { justify-content: center; align-items: center; text-align: center; }
+
+    #word-display {
+      max-width: 92vw;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    /* Главное английское слово (ОТВЕТ) */
+    .current-word {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3c3c3c;
+      line-height: 1.3;
+      letter-spacing: 0.2px;
+      transition: color 0.3s;
+    }
+
+    /* Русский перевод / подсказка */
+    .word-trans {
+      font-size: 10px;
+      color: #262626;
+      display: block;
+      margin-top: 2px;
+      font-weight: 400;
+    }
+
+    .word-lesson {
+      font-size: 8px;
+      color: #1c1c1c;
+      margin-left: 4px;
+      font-weight: normal;
+    }
+
+    /* История последних ответов (очень бледно) */
+    .history-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .history-item {
+      font-size: 9px;
+      color: #1e1e1e;
+      line-height: 1.25;
+    }
+    .history-item span.trans {
+      color: #161616;
+    }
+
+    /* Крошечный индикатор микрофона (1 пиксель) */
+    #mic-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #151515;
+      transition: background 0.3s;
+    }
+    #mic-dot.listening {
+      background: #253a25; /* Темно-зеленая точка */
+    }
+    #mic-dot.error {
+      background: #3a1c1c; /* Темно-красная точка */
+    }
+
+    /* Фейковый экран маскировки (часы Always-On Display) */
+    #fake-screen {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 50px;
+      color: #1a1a1a;
+      letter-spacing: 1px;
+    }
+    #fake-screen .fake-time {
+      font-size: 34px;
+      color: #222222;
+      font-weight: 200;
+    }
+    #fake-screen .fake-date {
+      font-size: 10px;
+      color: #1c1c1c;
+      margin-top: 5px;
+    }
+
+    /* Скрытая зона настроек в левом верхнем углу */
+    #hidden-trigger {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 44px;
+      height: 44px;
+      z-index: 10;
+      opacity: 0;
+    }
+
+    /* Меню настроек */
+    #settings-modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 8, 0.96);
+      display: none;
+      flex-direction: column;
+      padding: 24px 20px;
+      color: #aaa;
+      font-size: 13px;
+      overflow-y: auto;
+      z-index: 99;
+    }
+    #settings-modal h2 {
+      font-size: 15px;
+      color: #eee;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .setting-row {
+      margin-bottom: 14px;
+    }
+    .setting-label {
+      display: block;
+      margin-bottom: 6px;
+      color: #888;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    select {
+      width: 100%;
+      background: #181818;
+      color: #ccc;
+      border: 1px solid #333;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .btn {
+      background: #252525;
+      color: #eee;
+      border: 1px solid #444;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 8px;
+      width: 100%;
+    }
+    .btn-primary {
+      background: #1f3b25;
+      border-color: #2e5c38;
+      color: #aef0ba;
+    }
+
+    /* Окно старта */
+    #start-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      color: #888;
+      z-index: 100;
+    }
+    #start-overlay h1 {
+      font-size: 16px;
+      color: #ddd;
+      margin-bottom: 8px;
+    }
+    #start-overlay .badge {
+      display: inline-block;
+      font-size: 11px;
+      color: #68cf80;
+      background: #132517;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+    #start-overlay p {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+    #start-btn {
+      background: #17331b;
+      color: #72e48e;
+      border: 1px solid #2b6134;
+      padding: 13px 26px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Стартовый экран для запроса прав на микрофон -->
+  <div id="start-overlay">
+    <h1>BSUIR Stealth Prompter</h1>
+    <div class="badge">Режим: Слушает русский ➔ Выдаёт ответ на английском</div>
+    <p>
+      Программа слушает русскую речь преподавателя (например: <i>«настойчивость»</i>, <i>«совет директоров»</i>, <i>«устранять неполадки»</i>) и тихо выводит <b>готовый английский ответ</b> из Модуля 3 (Уроки 1, 3, 4).<br><br>
+      <b>Стелс-управление:</b><br>
+      • <b>1 тап:</b> Паника (мгновенно затемнить экран в 0%)<br>
+      • <b>2 тапа:</b> Фейковые часы (маскировка под режим сна)<br>
+      • <b>3 тапа (или левый верхний угол):</b> Меню настроек
+    </p>
+    <button id="start-btn">ВКЛЮЧИТЬ МИКРОФОН И СКРЫТЬСЯ</button>
+  </div>
+
+  <!-- Главный стелс-экран -->
+  <div id="stealth-container" class="pos-bottom-right">
+    <div id="hidden-trigger" title="Настройки"></div>
+    <div id="mic-dot"></div>
+
+    <div id="word-display">
+      <div id="current-box">
+        <span class="current-word" id="current-term">—</span>
+        <span class="word-trans" id="current-trans"></span>
+      </div>
+      <div class="history-list" id="history-box"></div>
+    </div>
+  </div>
+
+  <!-- Фейковый экран часов для маскировки -->
+  <div id="fake-screen">
+    <div class="fake-time" id="clock-time">12:00</div>
+    <div class="fake-date" id="clock-date">Понедельник, 15 мая</div>
+  </div>
+
+  <!-- Меню настроек -->
+  <div id="settings-modal">
+    <h2>
+      <span>Настройки суфлёра</span>
+      <span style="cursor:pointer;" id="close-settings">✕</span>
+    </h2>
+
+    <div class="setting-row">
+      <label class="setting-label">Размер английского слова (ответа)</label>
+      <select id="setting-fontsize">
+        <option value="11">Микро (11px — максимальный стелс)</option>
+        <option value="14" selected>Обычный стелс (14px)</option>
+        <option value="18">Средний (18px)</option>
+        <option value="22">Крупный (22px)</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Яркость серых букв на чёрном фоне</label>
+      <select id="setting-brightness">
+        <option value="ultra-dim">Едва видно (глубокий темно-серый #272727)</option>
+        <option value="dim" selected>Стелс темно-серый (#3a3a3a — по умолчанию)</option>
+        <option value="medium">Умеренный серый (#525252)</option>
+        <option value="light">Светло-серый (#757575)</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Позиция ответа на экране</label>
+      <select id="setting-position">
+        <option value="pos-bottom-right" selected>Правый нижний угол</option>
+        <option value="pos-bottom-left">Левый нижний угол</option>
+        <option value="pos-top-right">Правый верхний угол</option>
+        <option value="pos-top-left">Левый верхний угол</option>
+        <option value="pos-center">По центру</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Язык речи преподавателя</label>
+      <select id="setting-lang">
+        <option value="ru-RU" selected>Русский (учитель говорит по-русски)</option>
+        <option value="en-US">English US (учитель говорит по-английски)</option>
+        <option value="en-GB">English UK</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Пояснение на русском под словом</label>
+      <select id="setting-translation">
+        <option value="yes" selected>Показывать русское пояснение</option>
+        <option value="no">Только английский ответ</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">История предыдущих ответов</label>
+      <select id="setting-history">
+        <option value="3" selected>Показывать последние 3 слова</option>
+        <option value="1">Только самый последний ответ</option>
+        <option value="5">Последние 5 ответов</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Статус словаря:</label>
+      <div style="font-size:12px; color:#666; line-height:1.4;">
+        ✓ Загружено терминов: <b id="vocab-count-badge" style="color:#72e48e;">...</b><br>
+        ✓ Модуль 3: Урок 1 (Being a Successful Specialist)<br>
+        ✓ Модуль 3: Урок 3 (My Speciality: IT Professional)<br>
+        ✓ Модуль 3: Урок 4 (Professional Development)
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="save-settings-btn">Применить и вернуться</button>
+    <button class="btn" id="test-word-btn" style="margin-top:6px;">Проверить случайное слово</button>
+  </div>
+
+  <script>
+    // ==============================================================
+    // БАЗА СЛОВАРЯ БГУИР: МОДУЛЬ 3 (УРОКИ 1, 3, 4)
+    // Сопоставление русских фраз учителя -> английский ответ
+    // ==============================================================
+    const VOCABULARY = [
+      // ============================================================
+      // УРОК 1: Being a Successful Specialist (стр. 214-215 словаря)
+      // ============================================================
+      { 
+        term: "abide", 
+        trans: "соблюдать, следовать (правилам)", 
+        lesson: "L1", 
+        ru: ["соблюдать", "соблюдение", "следовать правилам", "подчиняться", "терпеть", "эбайд"],
+        en: ["abide", "abiding"]
+      },
+      { 
+        term: "adaptable", 
+        trans: "гибкий, легко приспосабливающийся", 
+        lesson: "L1", 
+        ru: ["адаптивн", "приспосаблива", "гибкий к условиям", "легко приспосабливающийся", "приспособляем"],
+        en: ["adaptable", "adaptability", "adapt"]
+      },
+      { 
+        term: "administration department", 
+        trans: "административный отдел", 
+        lesson: "L1", 
+        ru: ["административн отдел", "администрация", "административный департамент"],
+        en: ["administration department", "administration"]
+      },
+      { 
+        term: "agenda", 
+        trans: "повестка дня, план собрания", 
+        lesson: "L1", 
+        ru: ["повестк дня", "повестка дня", "повестке дня", "план собрания", "план встречи"],
+        en: ["agenda"]
+      },
+      { 
+        term: "be devoid of", 
+        trans: "быть лишённым чего-либо", 
+        lesson: "L1", 
+        ru: ["лишен чего", "лишенный", "быть лишенным", "не иметь ничего"],
+        en: ["devoid of", "be devoid"]
+      },
+      { 
+        term: "Board of directors", 
+        trans: "совет директоров", 
+        lesson: "L1", 
+        ru: ["совет директор", "совета директор", "совете директор"],
+        en: ["board of directors"]
+      },
+      { 
+        term: "business card", 
+        trans: "визитная карточка, визитка", 
+        lesson: "L1", 
+        ru: ["визитк", "визитная карточк", "визитку"],
+        en: ["business card"]
+      },
+      { 
+        term: "Chief Executive Officer (CEO)", 
+        trans: "генеральный директор (CEO)", 
+        lesson: "L1", 
+        ru: ["генеральн директор", "сео", "сио", "главный исполнительный", "глава компании"],
+        en: ["chief executive officer", "ceo"]
+      },
+      { 
+        term: "circumstance", 
+        trans: "обстоятельство", 
+        lesson: "L1", 
+        ru: ["обстоятельств", "обстоятельства", "жизненные условия"],
+        en: ["circumstance", "circumstances"]
+      },
+      { 
+        term: "commitment", 
+        trans: "преданность делу, обязательство", 
+        lesson: "L1", 
+        ru: ["преданност делу", "приверженност", "обязательств", "коммитмент"],
+        en: ["commitment"]
+      },
+      { 
+        term: "conscience", 
+        trans: "совесть", 
+        lesson: "L1", 
+        ru: ["совест", "совесть", "чистая совесть", "по совести"],
+        en: ["conscience"]
+      },
+      { 
+        term: "conviction", 
+        trans: "убеждение, твёрдая уверенность", 
+        lesson: "L1", 
+        ru: ["убеждени", "твердая уверенность", "убежденность"],
+        en: ["conviction"]
+      },
+      { 
+        term: "co-worker", 
+        trans: "коллега, сотрудник", 
+        lesson: "L1", 
+        ru: ["коллег", "сослуживец", "товарищ по работе"],
+        en: ["co-worker", "coworker"]
+      },
+      { 
+        term: "customer service department", 
+        trans: "отдел обслуживания клиентов", 
+        lesson: "L1", 
+        ru: ["обслуживани клиент", "отдел клиент", "клиентская служба", "работа с клиентами"],
+        en: ["customer service department", "customer service"]
+      },
+      { 
+        term: "decisive", 
+        trans: "решительный", 
+        lesson: "L1", 
+        ru: ["решительн", "решительный", "решительность"],
+        en: ["decisive", "decisiveness"]
+      },
+      { 
+        term: "dedicated", 
+        trans: "преданный своему делу, целеустремленный", 
+        lesson: "L1", 
+        ru: ["преданный делу", "целеустремленн", "посвятивший себя", "самоотверженный"],
+        en: ["dedicated", "dedication"]
+      },
+      { 
+        term: "define", 
+        trans: "определять, давать определение", 
+        lesson: "L1", 
+        ru: ["определять", "определить", "давать определение", "формулировать"],
+        en: ["define", "defining"]
+      },
+      { 
+        term: "employee", 
+        trans: "работник, служащий, сотрудник", 
+        lesson: "L1", 
+        ru: ["сотрудник", "работник", "служащ", "наемный рабочий"],
+        en: ["employee", "employees"]
+      },
+      { 
+        term: "encourage", 
+        trans: "поощрять, воодушевлять", 
+        lesson: "L1", 
+        ru: ["поощрять", "воодушевлять", "поддерживать", "подбадривать"],
+        en: ["encourage", "encouraging"]
+      },
+      { 
+        term: "meet goals", 
+        trans: "достигать поставленных целей", 
+        lesson: "L1", 
+        ru: ["достигать цел", "достичь цел", "выполнять цел", "добиваться цел"],
+        en: ["meet goals", "achieve goals"]
+      },
+      { 
+        term: "nurture", 
+        trans: "воспитывать, взращивать, развивать", 
+        lesson: "L1", 
+        ru: ["взращивать", "воспитывать", "вскармливать", "развивать способности"],
+        en: ["nurture", "nurturing"]
+      },
+      { 
+        term: "open-mindedness", 
+        trans: "непредубежденность, открытость новому", 
+        lesson: "L1", 
+        ru: ["непредубежденност", "открытость новому", "широта взглядов", "открытый ум"],
+        en: ["open-mindedness", "open minded"]
+      },
+      { 
+        term: "passionate", 
+        trans: "увлеченный, горящий делом", 
+        lesson: "L1", 
+        ru: ["увлеченн", "страстный", "горящий делом", "страстно любящий"],
+        en: ["passionate", "passion"]
+      },
+      { 
+        term: "people-focused", 
+        trans: "ориентированный на людей", 
+        lesson: "L1", 
+        ru: ["ориентирован на люд", "направленный на людей", "люди на первом месте"],
+        en: ["people-focused", "people focused"]
+      },
+      { 
+        term: "perseverance", 
+        trans: "настойчивость, упорство", 
+        lesson: "L1", 
+        ru: ["настойчивост", "упорств", "стойкость", "упорный труд"],
+        en: ["perseverance", "persevere"]
+      },
+      { 
+        term: "preference", 
+        trans: "предпочтение", 
+        lesson: "L1", 
+        ru: ["предпочтени", "предпочитать", "предпочтение"],
+        en: ["preference", "preferences"]
+      },
+      { 
+        term: "prod", 
+        trans: "подталкивать, побуждать к действию", 
+        lesson: "L1", 
+        ru: ["подталкивать", "побуждать", "подгонять", "стимулировать к"],
+        en: ["prod", "prodding"]
+      },
+      { 
+        term: "quality assurance department (QA)", 
+        trans: "отдел производства и контроля качества", 
+        lesson: "L1", 
+        ru: ["контрол качеств", "отдел качеств", "кью эй", "qa", "обеспечение качества"],
+        en: ["quality assurance", "qa"]
+      },
+      { 
+        term: "proficiency", 
+        trans: "мастерство, уровень квалификации", 
+        lesson: "L1", 
+        ru: ["уровень владения", "мастерств", "профессионализм", "квалификаци"],
+        en: ["proficiency", "proficient"]
+      },
+      { 
+        term: "property", 
+        trans: "свойство, характеристика, собственность", 
+        lesson: "L1", 
+        ru: ["свойств", "характеристик", "собственност", "имущество"],
+        en: ["property"]
+      },
+      { 
+        term: "reasonable", 
+        trans: "разумный, обоснованный", 
+        lesson: "L1", 
+        ru: ["разумн", "обоснованн", "благоразумный", "приемлемый"],
+        en: ["reasonable"]
+      },
+      { 
+        term: "responsibility", 
+        trans: "ответственность, обязанность", 
+        lesson: "L1", 
+        ru: ["ответственност", "обязанност", "ответственный"],
+        en: ["responsibility", "responsible"]
+      },
+      { 
+        term: "rigid", 
+        trans: "жёсткий, негибкий, строгий", 
+        lesson: "L1", 
+        ru: ["жестк", "негибк", "строг", "ригидный"],
+        en: ["rigid"]
+      },
+      { 
+        term: "satisfaction", 
+        trans: "удовлетворение", 
+        lesson: "L1", 
+        ru: ["удовлетворен", "удовлетворение", "удовлетворенность"],
+        en: ["satisfaction"]
+      },
+      { 
+        term: "self-aware", 
+        trans: "понимающий себя, самосознательный", 
+        lesson: "L1", 
+        ru: ["самосознани", "понимающий себя", "осознающий себя", "самокритичный"],
+        en: ["self-aware", "self-awareness"]
+      },
+      { 
+        term: "self-esteem", 
+        trans: "самооценка, самоуважение", 
+        lesson: "L1", 
+        ru: ["самооценк", "самоуважени", "чувство собственного достоинства"],
+        en: ["self-esteem"]
+      },
+      { 
+        term: "self-motivated", 
+        trans: "самомотивированный, инициативный", 
+        lesson: "L1", 
+        ru: ["самомотивирован", "внутренняя мотивация", "инициативный специалист"],
+        en: ["self-motivated"]
+      },
+      { 
+        term: "experienced", 
+        trans: "опытный", 
+        lesson: "L1", 
+        ru: ["опытн", "со стажем", "бывалый"],
+        en: ["experienced"]
+      },
+      { 
+        term: "finance department", 
+        trans: "финансовый отдел, бухгалтерия", 
+        lesson: "L1", 
+        ru: ["финансов отдел", "бухгалтери", "финансовая служба"],
+        en: ["finance department"]
+      },
+      { 
+        term: "get on with", 
+        trans: "ладить с кем-либо, уживаться", 
+        lesson: "L1", 
+        ru: ["ладить с", "уживаться с", "находить общий язык"],
+        en: ["get on with"]
+      },
+      { 
+        term: "get rid of", 
+        trans: "избавляться от", 
+        lesson: "L1", 
+        ru: ["избавляться от", "избавиться от", "устранить"],
+        en: ["get rid of"]
+      },
+      { 
+        term: "hands-off", 
+        trans: "невмешивающийся (руководитель)", 
+        lesson: "L1", 
+        ru: ["невмешивающ", "без прямого вмешательства", "свобода действий", "хэндс офф"],
+        en: ["hands-off"]
+      },
+      { 
+        term: "human resources department (HR)", 
+        trans: "отдел кадров, HR-отдел", 
+        lesson: "L1", 
+        ru: ["отдел кадров", "эйчар", "кадров служба", "управление персоналом", "hr"],
+        en: ["human resources", "hr department"]
+      },
+      { 
+        term: "humble", 
+        trans: "скромный", 
+        lesson: "L1", 
+        ru: ["скромн", "неприхотлив", "незаносчивый"],
+        en: ["humble", "humbleness"]
+      },
+      { 
+        term: "IT department", 
+        trans: "IT-отдел, отдел информационных технологий", 
+        lesson: "L1", 
+        ru: ["ай ти отдел", "ит отдел", "it отдел", "отдел информационных технологий"],
+        en: ["it department", "information technology department"]
+      },
+      { 
+        term: "leadership", 
+        trans: "лидерство, руководство", 
+        lesson: "L1", 
+        ru: ["лидерств", "руководств", "лидерские качества", "лидерские навыки"],
+        en: ["leadership", "leader"]
+      },
+      { 
+        term: "marketing department", 
+        trans: "отдел маркетинга", 
+        lesson: "L1", 
+        ru: ["отдел маркетинг", "маркетинговый отдел"],
+        en: ["marketing department"]
+      },
+      { 
+        term: "skill set", 
+        trans: "набор навыков", 
+        lesson: "L1", 
+        ru: ["набор навык", "скиллсет", "комплекс навыков"],
+        en: ["skill set", "skillset"]
+      },
+      { 
+        term: "strengthen", 
+        trans: "укреплять, усиливать", 
+        lesson: "L1", 
+        ru: ["укреплять", "укрепить", "усиливать", "усилить"],
+        en: ["strengthen"]
+      },
+      { 
+        term: "superior", 
+        trans: "начальник, вышестоящий руководитель", 
+        lesson: "L1", 
+        ru: ["начальник", "вышестоящ", "руководитель"],
+        en: ["superior", "superiors"]
+      },
+      { 
+        term: "supply chain management", 
+        trans: "управление цепочками поставок", 
+        lesson: "L1", 
+        ru: ["цепочк поставок", "управление поставками", "цепь поставок", "логистика поставок"],
+        en: ["supply chain management", "supply chain"]
+      },
+      { 
+        term: "top-down leader", 
+        trans: "авторитарный лидер (командование сверху вниз)", 
+        lesson: "L1", 
+        ru: ["авторитарн лидер", "сверху вниз", "командный стиль", "топ даун"],
+        en: ["top-down leader", "top down"]
+      },
+      { 
+        term: "trait", 
+        trans: "черта характера, особенность", 
+        lesson: "L1", 
+        ru: ["черта характер", "черта", "особенност", "характеристика личности"],
+        en: ["trait", "traits"]
+      },
+      { 
+        term: "trustworthy", 
+        trans: "надежный, заслуживающий доверия", 
+        lesson: "L1", 
+        ru: ["надежн", "заслуживающий довери", "верный"],
+        en: ["trustworthy"]
+      },
+      { 
+        term: "unbiased", 
+        trans: "беспристрастный, объективный", 
+        lesson: "L1", 
+        ru: ["беспристрастн", "объективн", "непредвзят"],
+        en: ["unbiased"]
+      },
+      { 
+        term: "willingness", 
+        trans: "готовность, охота, желание", 
+        lesson: "L1", 
+        ru: ["готовност", "охота", "желание взяться"],
+        en: ["willingness", "willing"]
+      },
+
+      // ============================================================
+      // УРОК 3: My Speciality: IT Professional (стр. 215-216 словаря)
+      // ============================================================
+      { 
+        term: "absent-minded", 
+        trans: "рассеянный, невнимательный", 
+        lesson: "L3", 
+        ru: ["рассеянн", "невнимательн", "забывчивый"],
+        en: ["absent-minded", "absent minded"]
+      },
+      { 
+        term: "accrue", 
+        trans: "накапливать(ся), начислять", 
+        lesson: "L3", 
+        ru: ["накапливать", "начислять", "нарастать", "аккумулировать"],
+        en: ["accrue", "accruing"]
+      },
+      { 
+        term: "advent", 
+        trans: "наступление, появление (технологии)", 
+        lesson: "L3", 
+        ru: ["появление технологий", "наступление эпохи", "приход технологий", "зарождение"],
+        en: ["advent"]
+      },
+      { 
+        term: "arrogant", 
+        trans: "высокомерный, заносчивый", 
+        lesson: "L3", 
+        ru: ["высокомерн", "заносчив", "надменный", "горделивый"],
+        en: ["arrogant"]
+      },
+      { 
+        term: "aspiring", 
+        trans: "стремящийся к успеху, начинающий", 
+        lesson: "L3", 
+        ru: ["начинающ", "стремящийся к успеху", "подающий надежды"],
+        en: ["aspiring", "aspire"]
+      },
+      { 
+        term: "hesitation", 
+        trans: "колебание, нерешительность, сомнение", 
+        lesson: "L3", 
+        ru: ["колебани", "нерешительност", "сомнение", "заминка"],
+        en: ["hesitation", "hesitate"]
+      },
+      { 
+        term: "immoral", 
+        trans: "аморальный, безнравственный", 
+        lesson: "L3", 
+        ru: ["аморальн", "безнравственн", "неэтичный"],
+        en: ["immoral"]
+      },
+      { 
+        term: "initiative", 
+        trans: "инициативный; инициатива", 
+        lesson: "L3", 
+        ru: ["инициатив", "инициативный", "проявлять инициативу"],
+        en: ["initiative"]
+      },
+      { 
+        term: "intricate", 
+        trans: "сложный, запутанный, замысловатый", 
+        lesson: "L3", 
+        ru: ["запутанн", "замысловат", "сложн", "хитроумный"],
+        en: ["intricate"]
+      },
+      { 
+        term: "investigate", 
+        trans: "исследовать, расследовать, изучать", 
+        lesson: "L3", 
+        ru: ["исследовать", "расследовать", "изучать", "выяснять"],
+        en: ["investigate", "investigation"]
+      },
+      { 
+        term: "be capable of", 
+        trans: "быть способным на что-либо", 
+        lesson: "L3", 
+        ru: ["способен на", "способна на", "быть способным", "способность сделать"],
+        en: ["capable of", "be capable"]
+      },
+      { 
+        term: "challenging", 
+        trans: "сложный, бросающий вызов", 
+        lesson: "L3", 
+        ru: ["бросающий вызов", "непростой", "трудный проект", "сложная задача"],
+        en: ["challenging", "challenge"]
+      },
+      { 
+        term: "colleague", 
+        trans: "коллега", 
+        lesson: "L3", 
+        ru: ["коллег", "сослуживец"],
+        en: ["colleague", "colleagues"]
+      },
+      { 
+        term: "communicative", 
+        trans: "общительный, коммуникабельный", 
+        lesson: "L3", 
+        ru: ["общительн", "коммуникабельн"],
+        en: ["communicative"]
+      },
+      { 
+        term: "competent at", 
+        trans: "компетентный в чем-либо", 
+        lesson: "L3", 
+        ru: ["компетентен в", "компетентный в", "разбирается в", "грамотный специалист"],
+        en: ["competent at", "competent"]
+      },
+      { 
+        term: "competitive", 
+        trans: "конкурентоспособный, соревновательный", 
+        lesson: "L3", 
+        ru: ["конкурентоспособн", "соревновательн", "конкурентный рынок"],
+        en: ["competitive", "competitiveness"]
+      },
+      { 
+        term: "computer operator", 
+        trans: "оператор ЭВМ / компьютера", 
+        lesson: "L3", 
+        ru: ["оператор эвм", "оператор компьютер", "компьютерный оператор"],
+        en: ["computer operator"]
+      },
+      { 
+        term: "computer programmer", 
+        trans: "программист", 
+        lesson: "L3", 
+        ru: ["программист", "разработчик", "кодер"],
+        en: ["computer programmer", "programmer"]
+      },
+      { 
+        term: "conscientious", 
+        trans: "добросовестный, сознательный", 
+        lesson: "L3", 
+        ru: ["добросовестн", "сознательн", "честный работник"],
+        en: ["conscientious"]
+      },
+      { 
+        term: "curious", 
+        trans: "любознательный, любопытный", 
+        lesson: "L3", 
+        ru: ["любознательн", "любопытн"],
+        en: ["curious"]
+      },
+      { 
+        term: "database administrator (DBA)", 
+        trans: "администратор баз данных", 
+        lesson: "L3", 
+        ru: ["администратор баз данн", "база данных", "дба", "базы данных", "администратор бд"],
+        en: ["database administrator", "database", "dba"]
+      },
+      { 
+        term: "demanding", 
+        trans: "требовательный, трудоемкий", 
+        lesson: "L3", 
+        ru: ["требовательн", "трудоемк", "взыскательный"],
+        en: ["demanding"]
+      },
+      { 
+        term: "do for a living", 
+        trans: "зарабатывать на жизнь (профессия)", 
+        lesson: "L3", 
+        ru: ["зарабатывать на жизнь", "чем зарабатывать", "кем работаете", "на жизнь"],
+        en: ["do for a living", "for a living"]
+      },
+      { 
+        term: "emergence", 
+        trans: "появление, возникновение", 
+        lesson: "L3", 
+        ru: ["появлени", "возникновени", "зарождени"],
+        en: ["emergence", "emerge"]
+      },
+      { 
+        term: "escalate", 
+        trans: "обостряться, возрастать", 
+        lesson: "L3", 
+        ru: ["обостряться", "нарастать", "эскалировать", "увеличиваться"],
+        en: ["escalate", "escalating"]
+      },
+      { 
+        term: "evaluate", 
+        trans: "оценивать", 
+        lesson: "L3", 
+        ru: ["оценивать", "оценить", "дать оценку"],
+        en: ["evaluate", "evaluation"]
+      },
+      { 
+        term: "familiarity", 
+        trans: "осведомленность, близкое знание", 
+        lesson: "L3", 
+        ru: ["осведомленност", "знакомство с", "знание технологии"],
+        en: ["familiarity", "familiar"]
+      },
+      { 
+        term: "flexible", 
+        trans: "гибкий", 
+        lesson: "L3", 
+        ru: ["гибк", "уступчивый"],
+        en: ["flexible", "flexibility"]
+      },
+      { 
+        term: "free will", 
+        trans: "свободная воля", 
+        lesson: "L3", 
+        ru: ["свободная воля", "свобода воли", "по доброй воле"],
+        en: ["free will"]
+      },
+      { 
+        term: "get satisfaction from", 
+        trans: "получать удовлетворение от", 
+        lesson: "L3", 
+        ru: ["получать удовлетворение", "удовлетворение от работы"],
+        en: ["get satisfaction from"]
+      },
+      { 
+        term: "good at", 
+        trans: "хорош в чем-либо, способный", 
+        lesson: "L3", 
+        ru: ["хорош в", "силен в", "хорошо разбирается", "способный к"],
+        en: ["good at"]
+      },
+      { 
+        term: "graphic designer", 
+        trans: "графический дизайнер", 
+        lesson: "L3", 
+        ru: ["графическ дизайнер", "графический дизайн"],
+        en: ["graphic designer", "graphic design"]
+      },
+      { 
+        term: "hardware engineer", 
+        trans: "инженер аппаратного обеспечения / «железа»", 
+        lesson: "L3", 
+        ru: ["инженер по аппаратн", "инженер по желез", "аппаратное обеспечение", "хардвер"],
+        en: ["hardware engineer", "hardware"]
+      },
+      { 
+        term: "have a good eye for", 
+        trans: "иметь намётанный глаз на что-то", 
+        lesson: "L3", 
+        ru: ["наметан глаз", "наметанный глаз", "хороший вкус на", "разбираться визуально"],
+        en: ["have a good eye for", "good eye"]
+      },
+      { 
+        term: "IT help desk technician", 
+        trans: "специалист службы техподдержки", 
+        lesson: "L3", 
+        ru: ["техподдержк", "служба поддержки", "хелпдеск", "специалист поддержки", "хелп деск"],
+        en: ["help desk technician", "help desk", "helpdesk"]
+      },
+      { 
+        term: "IT project manager", 
+        trans: "менеджер IT-проектов", 
+        lesson: "L3", 
+        ru: ["менеджер проектов", "проджект менеджер", "руководитель проектов", "it проджект"],
+        en: ["it project manager", "project manager"]
+      },
+      { 
+        term: "IT security specialist", 
+        trans: "специалист по информационной безопасности", 
+        lesson: "L3", 
+        ru: ["информационн безопасн", "кибербезопасн", "безопасник", "защита информации"],
+        en: ["security specialist", "cyber security", "cybersecurity"]
+      },
+      { 
+        term: "mobile application developer", 
+        trans: "разработчик мобильных приложений", 
+        lesson: "L3", 
+        ru: ["мобильн разработчик", "разработчик мобильных приложений", "мобильные приложения"],
+        en: ["mobile developer", "app developer"]
+      },
+      { 
+        term: "network specialist", 
+        trans: "сетевой специалист / системный инженер сетей", 
+        lesson: "L3", 
+        ru: ["сетев специалист", "сетевой инженер", "специалист по сетям", "компьютерные сети"],
+        en: ["network specialist", "network engineer"]
+      },
+      { 
+        term: "proliferation", 
+        trans: "быстрое распространение, разрастание", 
+        lesson: "L3", 
+        ru: ["распространени", "разрастани", "пролифераци", "быстрый рост устройств"],
+        en: ["proliferation"]
+      },
+      { 
+        term: "rely on", 
+        trans: "полагаться на", 
+        lesson: "L3", 
+        ru: ["полагаться на", "положиться на", "надеяться на"],
+        en: ["rely on"]
+      },
+      { 
+        term: "remote", 
+        trans: "удаленный (о работе, сервере)", 
+        lesson: "L3", 
+        ru: ["удаленн", "удаленная работа", "дистанционн"],
+        en: ["remote", "remotely"]
+      },
+      { 
+        term: "reputable", 
+        trans: "авторитетный, с хорошей репутацией", 
+        lesson: "L3", 
+        ru: ["авторитетн", "с хорошей репутацией", "уважаемый"],
+        en: ["reputable"]
+      },
+      { 
+        term: "requirement", 
+        trans: "требование", 
+        lesson: "L3", 
+        ru: ["требовани", "необходимое условие"],
+        en: ["requirement", "requirements"]
+      },
+      { 
+        term: "responsible", 
+        trans: "ответственный", 
+        lesson: "L3", 
+        ru: ["ответственн"],
+        en: ["responsible"]
+      },
+      { 
+        term: "selfish", 
+        trans: "эгоистичный, себялюбивый", 
+        lesson: "L3", 
+        ru: ["эгоистичн", "эгоист", "себялюбив"],
+        en: ["selfish"]
+      },
+      { 
+        term: "share experience", 
+        trans: "делиться опытом", 
+        lesson: "L3", 
+        ru: ["делиться опыт", "поделиться опыт", "обмен опытом"],
+        en: ["share experience"]
+      },
+      { 
+        term: "sneaky", 
+        trans: "скрытный, подлый, исподтишка", 
+        lesson: "L3", 
+        ru: ["скрытн", "подл", "исподтишка", "хитрый"],
+        en: ["sneaky"]
+      },
+      { 
+        term: "software engineer", 
+        trans: "инженер-программист / разработчик ПО", 
+        lesson: "L3", 
+        ru: ["инженер программ", "разработчик по", "программное обеспечение", "софтвер"],
+        en: ["software engineer", "software development"]
+      },
+      { 
+        term: "sophistication", 
+        trans: "сложность, утонченность, продвинутость", 
+        lesson: "L3", 
+        ru: ["утонченност", "сложност", "продвинутост", "высокая сложность"],
+        en: ["sophistication", "sophisticated"]
+      },
+      { 
+        term: "studious", 
+        trans: "прилежный, старательный, любящий учиться", 
+        lesson: "L3", 
+        ru: ["прилежн", "старательн", "прилежно учится"],
+        en: ["studious"]
+      },
+      { 
+        term: "systems analyst", 
+        trans: "системный аналитик", 
+        lesson: "L3", 
+        ru: ["системн аналитик", "системный анализ"],
+        en: ["systems analyst", "system analyst"]
+      },
+      { 
+        term: "take into account", 
+        trans: "принимать во внимание, учитывать", 
+        lesson: "L3", 
+        ru: ["принимать во внимание", "принять во внимание", "учитывать", "учесть"],
+        en: ["take into account"]
+      },
+      { 
+        term: "tangible", 
+        trans: "ощутимый, материальный, реальный", 
+        lesson: "L3", 
+        ru: ["ощутим", "материальн", "весомый результат", "осязаемый"],
+        en: ["tangible"]
+      },
+      { 
+        term: "troubleshoot", 
+        trans: "устранять неполадки, отлаживать, диагностировать", 
+        lesson: "L3", 
+        ru: ["устранять неполадк", "устранить неисправност", "поиск неполадок", "отладк", "траблшут"],
+        en: ["troubleshoot", "troubleshooting"]
+      },
+      { 
+        term: "video game developer", 
+        trans: "разработчик видеоигр", 
+        lesson: "L3", 
+        ru: ["разработчик игр", "геймдев", "разработчик видеоигр", "создатель игр"],
+        en: ["video game developer", "game developer"]
+      },
+      { 
+        term: "web developer", 
+        trans: "веб-разработчик", 
+        lesson: "L3", 
+        ru: ["веб разработчик", "создатель сайтов", "веб разработка"],
+        en: ["web developer", "web development"]
+      },
+      { 
+        term: "work-flow", 
+        trans: "рабочий процесс, рабочий поток", 
+        lesson: "L3", 
+        ru: ["рабоч процесс", "воркфлоу", "порядок работы", "последовательность работы"],
+        en: ["work-flow", "workflow"]
+      },
+
+      // ============================================================
+      // УРОК 4: Professional Development (стр. 216-217 словаря)
+      // ============================================================
+      { 
+        term: "ability", 
+        trans: "способность, умение", 
+        lesson: "L4", 
+        ru: ["способност", "умени"],
+        en: ["ability", "abilities"]
+      },
+      { 
+        term: "approach", 
+        trans: "подход, метод", 
+        lesson: "L4", 
+        ru: ["подход", "метод"],
+        en: ["approach"]
+      },
+      { 
+        term: "ask for", 
+        trans: "просить о чем-либо", 
+        lesson: "L4", 
+        ru: ["просить о", "попросить о", "запрашивать помощь"],
+        en: ["ask for"]
+      },
+      { 
+        term: "attend", 
+        trans: "посещать, присутствовать", 
+        lesson: "L4", 
+        ru: ["посещать", "присутствовать", "посетить лекцию"],
+        en: ["attend", "attending"]
+      },
+      { 
+        term: "attendance", 
+        trans: "посещаемость, присутствие", 
+        lesson: "L4", 
+        ru: ["посещаемост", "присутствие на занятиях"],
+        en: ["attendance"]
+      },
+      { 
+        term: "break out of comfort zone", 
+        trans: "выйти из зоны комфорта", 
+        lesson: "L4", 
+        ru: ["выйти из зоны комфорта", "выходить из зоны комфорта", "покинуть зону комфорта"],
+        en: ["break out of comfort zone", "break out of"]
+      },
+      { 
+        term: "comfort zone", 
+        trans: "зона комфорта", 
+        lesson: "L4", 
+        ru: ["зона комфорт", "зоне комфорт", "зону комфорт"],
+        en: ["comfort zone"]
+      },
+      { 
+        term: "competence", 
+        trans: "компетентность, компетенция", 
+        lesson: "L4", 
+        ru: ["компетентност", "компетенци", "компетенция"],
+        en: ["competence", "competency"]
+      },
+      { 
+        term: "competently", 
+        trans: "компетентно, квалифицированно", 
+        lesson: "L4", 
+        ru: ["компетентн", "квалифицированн", "со знанием дела"],
+        en: ["competently"]
+      },
+      { 
+        term: "concentrate", 
+        trans: "сосредотачиваться, концентрироваться", 
+        lesson: "L4", 
+        ru: ["сосредотачиваться", "сконцентрироваться", "концентрироваться"],
+        en: ["concentrate", "concentrating"]
+      },
+      { 
+        term: "concentration", 
+        trans: "концентрация, сосредоточенность", 
+        lesson: "L4", 
+        ru: ["концентраци", "сосредоточенност"],
+        en: ["concentration"]
+      },
+      { 
+        term: "concept", 
+        trans: "концепция, понятие", 
+        lesson: "L4", 
+        ru: ["концепци", "поняти"],
+        en: ["concept"]
+      },
+      { 
+        term: "conference", 
+        trans: "конференция", 
+        lesson: "L4", 
+        ru: ["конференци"],
+        en: ["conference"]
+      },
+      { 
+        term: "Continuing Professional Development (CPD)", 
+        trans: "непрерывное профессиональное развитие", 
+        lesson: "L4", 
+        ru: ["непрерывное профессиональное развитие", "профессиональное развитие", "повышение квалификации", "cpd", "си пи ди"],
+        en: ["continuing professional development", "cpd"]
+      },
+      { 
+        term: "contribution", 
+        trans: "вклад, содействие", 
+        lesson: "L4", 
+        ru: ["вклад", "содействи", "внесение вклада"],
+        en: ["contribution", "contribute"]
+      },
+      { 
+        term: "employee development", 
+        trans: "развитие сотрудников", 
+        lesson: "L4", 
+        ru: ["развитие сотрудник", "обучение персонала", "развитие персонала"],
+        en: ["employee development"]
+      },
+      { 
+        term: "job requirement", 
+        trans: "требование к должности / работе", 
+        lesson: "L4", 
+        ru: ["требование к должност", "требования к вакансии", "квалификационные требования"],
+        en: ["job requirement"]
+      },
+      { 
+        term: "marketable", 
+        trans: "востребованный на рынке труда, ликвидный", 
+        lesson: "L4", 
+        ru: ["востребованн", "конкурентный на рынке труда", "рыночный"],
+        en: ["marketable"]
+      },
+      { 
+        term: "mentor", 
+        trans: "наставник, ментор", 
+        lesson: "L4", 
+        ru: ["наставник", "ментор", "куратор"],
+        en: ["mentor"]
+      },
+      { 
+        term: "mentoring", 
+        trans: "наставничество, менторинг", 
+        lesson: "L4", 
+        ru: ["наставничеств", "менторинг"],
+        en: ["mentoring", "mentorship"]
+      },
+      { 
+        term: "motivate", 
+        trans: "мотивировать", 
+        lesson: "L4", 
+        ru: ["мотивировать", "побуждать"],
+        en: ["motivate"]
+      },
+      { 
+        term: "motivating", 
+        trans: "мотивирующий", 
+        lesson: "L4", 
+        ru: ["мотивирующ"],
+        en: ["motivating"]
+      },
+      { 
+        term: "motivation", 
+        trans: "мотивация", 
+        lesson: "L4", 
+        ru: ["мотиваци"],
+        en: ["motivation"]
+      },
+      { 
+        term: "on-the-job behaviour", 
+        trans: "поведение на рабочем месте", 
+        lesson: "L4", 
+        ru: ["на рабочем месте", "поведение на работ"],
+        en: ["on-the-job"]
+      },
+      { 
+        term: "peer connection", 
+        trans: "связь с коллегами / сокурсниками", 
+        lesson: "L4", 
+        ru: ["связь с коллегами", "общение с сокурсниками", "контакт с равными"],
+        en: ["peer connection", "peer"]
+      },
+      { 
+        term: "personal development (PD)", 
+        trans: "личностное развитие", 
+        lesson: "L4", 
+        ru: ["личностное развитие", "саморазвитие", "персональное развитие"],
+        en: ["personal development"]
+      },
+      { 
+        term: "personal growth", 
+        trans: "личностный рост", 
+        lesson: "L4", 
+        ru: ["личностный рост", "рост личности"],
+        en: ["personal growth"]
+      },
+      { 
+        term: "practice", 
+        trans: "практика (сущ.)", 
+        lesson: "L4", 
+        ru: ["практика", "на практике"],
+        en: ["practice"]
+      },
+      { 
+        term: "practise", 
+        trans: "практиковать(ся), тренировать (глаг.)", 
+        lesson: "L4", 
+        ru: ["практиковать", "упражняться", "тренироваться"],
+        en: ["practise", "practising"]
+      },
+      { 
+        term: "practitioner", 
+        trans: "практикующий специалист, практик", 
+        lesson: "L4", 
+        ru: ["практикующий специалист", "практик"],
+        en: ["practitioner"]
+      },
+      { 
+        term: "productive", 
+        trans: "продуктивный", 
+        lesson: "L4", 
+        ru: ["продуктивн"],
+        en: ["productive"]
+      },
+      { 
+        term: "productivity", 
+        trans: "производительность, продуктивность", 
+        lesson: "L4", 
+        ru: ["производительност", "продуктивност"],
+        en: ["productivity"]
+      },
+      { 
+        term: "professional degree", 
+        trans: "профессиональная степень / диплом", 
+        lesson: "L4", 
+        ru: ["профессиональная степень", "диплом о квалификации", "диплом вуза"],
+        en: ["professional degree"]
+      },
+      { 
+        term: "esteem", 
+        trans: "уважение, почтение, признание", 
+        lesson: "L4", 
+        ru: ["почтени", "уважени", "признание заслуг"],
+        en: ["esteem"]
+      },
+      { 
+        term: "expand", 
+        trans: "расширять, развивать", 
+        lesson: "L4", 
+        ru: ["расширять", "расширить", "увеличивать кругозор"],
+        en: ["expand", "expansion"]
+      },
+      { 
+        term: "experience", 
+        trans: "опыт; испытывать", 
+        lesson: "L4", 
+        ru: ["опыт", "стаж работы", "испытывать на себе"],
+        en: ["experience"]
+      },
+      { 
+        term: "expert", 
+        trans: "эксперт, специалист", 
+        lesson: "L4", 
+        ru: ["эксперт", "специалист высокой квалификации"],
+        en: ["expert", "expertise"]
+      },
+      { 
+        term: "exploit", 
+        trans: "использовать, эксплуатировать", 
+        lesson: "L4", 
+        ru: ["эксплуатировать", "использовать возможности"],
+        en: ["exploit", "exploiting"]
+      },
+      { 
+        term: "exploitation of talent", 
+        trans: "раскрытие / применение таланта", 
+        lesson: "L4", 
+        ru: ["применение таланта", "раскрытие таланта", "использование таланта"],
+        en: ["exploitation of talent", "exploitation"]
+      },
+      { 
+        term: "feedback", 
+        trans: "обратная связь, отзыв", 
+        lesson: "L4", 
+        ru: ["обратная связь", "отзыв", "фидбек", "фидбэк"],
+        en: ["feedback"]
+      },
+      { 
+        term: "implementation", 
+        trans: "внедрение, реализация", 
+        lesson: "L4", 
+        ru: ["внедрени", "реализаци", "осуществление плана"],
+        en: ["implementation", "implement"]
+      },
+      { 
+        term: "increase", 
+        trans: "увеличение; повышать, расти", 
+        lesson: "L4", 
+        ru: ["увеличени", "повышаться", "возрастать"],
+        en: ["increase"]
+      },
+      { 
+        term: "inspiration", 
+        trans: "вдохновение", 
+        lesson: "L4", 
+        ru: ["вдохновени"],
+        en: ["inspiration"]
+      },
+      { 
+        term: "inspire", 
+        trans: "вдохновлять", 
+        lesson: "L4", 
+        ru: ["вдохновлять", "вдохновить"],
+        en: ["inspire"]
+      },
+      { 
+        term: "inspiring", 
+        trans: "вдохновляющий", 
+        lesson: "L4", 
+        ru: ["вдохновляющ"],
+        en: ["inspiring"]
+      },
+      { 
+        term: "recognise", 
+        trans: "признавать, осознавать", 
+        lesson: "L4", 
+        ru: ["признавать", "признать", "осознавать", "узнавать"],
+        en: ["recognise", "recognize"]
+      },
+      { 
+        term: "reflect on", 
+        trans: "размышлять о, осмысливать", 
+        lesson: "L4", 
+        ru: ["размышлять о", "осмысливать", "размышления о", "анализировать прошлое"],
+        en: ["reflect on", "reflect"]
+      },
+      { 
+        term: "self-actualisation", 
+        trans: "самоактуализация, самореализация", 
+        lesson: "L4", 
+        ru: ["самоактуализаци", "самореализаци"],
+        en: ["self-actualisation", "self actualization"]
+      },
+      { 
+        term: "set high goals", 
+        trans: "ставить высокие цели", 
+        lesson: "L4", 
+        ru: ["ставить высокие цели", "поставить высокие цели", "высокие цели"],
+        en: ["set high goals", "set goals"]
+      },
+      { 
+        term: "skill", 
+        trans: "навык, умение", 
+        lesson: "L4", 
+        ru: ["навык", "умение"],
+        en: ["skill", "skills"]
+      },
+      { 
+        term: "strategy", 
+        trans: "стратегия", 
+        lesson: "L4", 
+        ru: ["стратеги"],
+        en: ["strategy"]
+      },
+      { 
+        term: "tactics", 
+        trans: "тактика", 
+        lesson: "L4", 
+        ru: ["тактик"],
+        en: ["tactics", "tactic"]
+      },
+      { 
+        term: "trainer", 
+        trans: "инструктор, тренер", 
+        lesson: "L4", 
+        ru: ["тренер", "инструктор", "наставник"],
+        en: ["trainer"]
+      },
+      { 
+        term: "underpin", 
+        trans: "подкреплять, поддерживать, служить фундаментом", 
+        lesson: "L4", 
+        ru: ["подкреплять", "поддерживать", "служить фундамент", "лежать в основе"],
+        en: ["underpin"]
+      },
+      { 
+        term: "validity", 
+        trans: "обоснованность, весомость, достоверность", 
+        lesson: "L4", 
+        ru: ["обоснованност", "достоверност", "весомост", "валидность"],
+        en: ["validity"]
+      },
+      { 
+        term: "workshop", 
+        trans: "семинар, мастер-класс, воркшоп", 
+        lesson: "L4", 
+        ru: ["семинар", "мастер-класс", "мастер класс", "воркшоп", "практическое занятие"],
+        en: ["workshop"]
+      }
+    ];
+
+    document.getElementById('vocab-count-badge').textContent = VOCABULARY.length;
+
+    // ==============================================================
+    // ИНТЕРФЕЙС И РЕЖИМЫ СТЕЛСА
+    // ==============================================================
+    const container = document.getElementById('stealth-container');
+    const wordDisplay = document.getElementById('word-display');
+    const currentTermEl = document.getElementById('current-term');
+    const currentTransEl = document.getElementById('current-trans');
+    const historyBoxEl = document.getElementById('history-box');
+    const micDot = document.getElementById('mic-dot');
+    const fakeScreen = document.getElementById('fake-screen');
+    const clockTime = document.getElementById('clock-time');
+    const clockDate = document.getElementById('clock-date');
+    const settingsModal = document.getElementById('settings-modal');
+    const startOverlay = document.getElementById('start-overlay');
+    const startBtn = document.getElementById('start-btn');
+
+    let isHidden = false;
+    let isFakeClock = false;
+    let historyWords = [];
+    let tapCount = 0;
+    let tapTimer = null;
+    let fadeTimeout = null;
+    let wakeLock = null;
+
+    let config = {
+      fontSize: 14,
+      brightness: 'dim',
+      position: 'pos-bottom-right',
+      showTrans: true,
+      historyCount: 3,
+      lang: 'ru-RU' // ПО УМОЛЧАНИЮ РУССКИЙ ЯЗЫК ДЛЯ УЧИТЕЛЬНИЦЫ!
+    };
+
+    const BRIGHTNESS_MAP = {
+      'ultra-dim': { main: '#272727', trans: '#1c1c1c', hist: '#141414' },
+      'dim':       { main: '#3a3a3a', trans: '#262626', hist: '#1c1c1c' },
+      'medium':    { main: '#525252', trans: '#363636', hist: '#242424' },
+      'light':     { main: '#757575', trans: '#4c4c4c', hist: '#303030' }
+    };
+
+    function applyConfig() {
+      currentTermEl.style.fontSize = config.fontSize + 'px';
+      currentTransEl.style.fontSize = Math.max(10, config.fontSize - 3) + 'px';
+      
+      const colors = BRIGHTNESS_MAP[config.brightness] || BRIGHTNESS_MAP['dim'];
+      currentTermEl.style.color = colors.main;
+      currentTransEl.style.color = colors.trans;
+
+      container.className = '';
+      container.classList.add(config.position);
+
+      currentTransEl.style.display = config.showTrans ? 'block' : 'none';
+      renderHistory();
+    }
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.log("WakeLock:", err);
+      }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      clockTime.textContent = `${h}:${m}`;
+
+      const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+      const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+      clockDate.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ==============================================================
+    // ТАПЫ И АНТИПАЛЕВО (КНОПКА ПАНИКИ)
+    // ==============================================================
+    container.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('hidden-trigger')) {
+        openSettings();
+        return;
+      }
+
+      tapCount++;
+      clearTimeout(tapTimer);
+
+      tapTimer = setTimeout(() => {
+        if (tapCount === 1) {
+          // 1 ТАП: Паника! Мгновенно глушим экран (100% черный)
+          toggleStealthBlackout();
+        } else if (tapCount === 2) {
+          // 2 ТАПА: Режим фейковых часов Always-On Display
+          toggleFakeClock();
+        } else if (tapCount >= 3) {
+          // 3 ТАПА: Меню настроек
+          openSettings();
+        }
+        tapCount = 0;
+      }, 280);
+    });
+
+    fakeScreen.addEventListener('click', () => {
+      fakeScreen.style.display = 'none';
+      isFakeClock = false;
+      wordDisplay.style.opacity = '1';
+    });
+
+    function toggleStealthBlackout() {
+      if (isFakeClock) {
+        fakeScreen.style.display = 'none';
+        isFakeClock = false;
+      }
+      isHidden = !isHidden;
+      wordDisplay.style.opacity = isHidden ? '0' : '1';
+    }
+
+    function toggleFakeClock() {
+      isFakeClock = !isFakeClock;
+      if (isFakeClock) {
+        fakeScreen.style.display = 'flex';
+        wordDisplay.style.opacity = '0';
+      } else {
+        fakeScreen.style.display = 'none';
+        wordDisplay.style.opacity = isHidden ? '0' : '1';
+      }
+    }
+
+    function openSettings() {
+      settingsModal.style.display = 'flex';
+    }
+
+    document.getElementById('close-settings').addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+    });
+    document.getElementById('save-settings-btn').addEventListener('click', () => {
+      config.fontSize = parseInt(document.getElementById('setting-fontsize').value);
+      config.brightness = document.getElementById('setting-brightness').value;
+      config.position = document.getElementById('setting-position').value;
+      config.showTrans = document.getElementById('setting-translation').value === 'yes';
+      config.historyCount = parseInt(document.getElementById('setting-history').value);
+      
+      const newLang = document.getElementById('setting-lang').value;
+      if (newLang !== config.lang) {
+        config.lang = newLang;
+        if (recognition) {
+          recognition.lang = config.lang;
+        }
+      }
+
+      applyConfig();
+      settingsModal.style.display = 'none';
+    });
+
+    document.getElementById('test-word-btn').addEventListener('click', () => {
+      const sample = VOCABULARY[Math.floor(Math.random() * VOCABULARY.length)];
+      onWordDetected(sample);
+      settingsModal.style.display = 'none';
+    });
+
+    // ==============================================================
+    // ОТОБРАЖЕНИЕ АНГЛИЙСКОГО ОТВЕТА
+    // ==============================================================
+    function onWordDetected(item) {
+      if (isHidden) return;
+
+      // Главный текст - АНГЛИЙСКИЙ ОТВЕТ
+      currentTermEl.innerHTML = `${item.term} <span class="word-lesson">[${item.lesson}]</span>`;
+      currentTransEl.textContent = config.showTrans ? item.trans : '';
+      wordDisplay.style.opacity = '1';
+
+      if (historyWords.length === 0 || historyWords[0].term !== item.term) {
+        historyWords.unshift(item);
+        if (historyWords.length > 5) historyWords.pop();
+        renderHistory();
+      }
+
+      clearTimeout(fadeTimeout);
+      fadeTimeout = setTimeout(() => {
+        currentTermEl.style.color = '#171717';
+        currentTransEl.style.color = '#101010';
+      }, 15000);
+
+      const colors = BRIGHTNESS_MAP[config.brightness] || BRIGHTNESS_MAP['dim'];
+      currentTermEl.style.color = colors.main;
+      currentTransEl.style.color = colors.trans;
+    }
+
+    function renderHistory() {
+      historyBoxEl.innerHTML = '';
+      if (config.historyCount <= 1) return;
+
+      const colors = BRIGHTNESS_MAP[config.brightness] || BRIGHTNESS_MAP['dim'];
+      const past = historyWords.slice(1, config.historyCount);
+
+      past.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.style.color = colors.hist;
+        div.innerHTML = config.showTrans 
+          ? `<b>${item.term}</b> <span class="trans">— ${item.trans.split(',')[0]}</span>`
+          : item.term;
+        historyBoxEl.appendChild(div);
+      });
+    }
+
+    // ==============================================================
+    // ДВИЖОК РАСПОЗНАВАНИЯ РЕЧИ (WEB SPEECH API)
+    // ==============================================================
+    let recognition = null;
+    let isListening = false;
+    let shouldBeListening = false;
+
+    function initSpeech() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Браузер не поддерживает SpeechRecognition. Запустите в Google Chrome на Android или Safari на iOS.");
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = config.lang; // По умолчанию: 'ru-RU'
+      recognition.maxAlternatives = 3;
+
+      recognition.onstart = () => {
+        isListening = true;
+        micDot.className = 'listening';
+        requestWakeLock();
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micDot.className = '';
+        if (shouldBeListening) {
+          setTimeout(() => {
+            try { recognition.start(); } catch(e){}
+          }, 300);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.log("Speech Error:", event.error);
+        if (event.error === 'not-allowed') {
+          micDot.className = 'error';
+          alert("Доступ к микрофону заблокирован. Разрешите микрофон в браузере!");
+        } else {
+          micDot.className = 'error';
+          setTimeout(() => {
+            if (shouldBeListening && !isListening) {
+              try { recognition.start(); } catch(e){}
+            }
+          }, 1000);
+        }
+      };
+
+      recognition.onresult = (event) => {
+        let fullTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          fullTranscript += ' ' + event.results[i][0].transcript;
+        }
+        analyzeSpokenText(fullTranscript.toLowerCase());
+      };
+    }
+
+    // ==============================================================
+    // АНАЛИЗ УСЛЫШАННОГО (РУССКИЙ И АНГЛИЙСКИЙ ПОИСК)
+    // ==============================================================
+    let lastMatchedTerm = '';
+    let lastMatchTime = 0;
+
+    function analyzeSpokenText(text) {
+      if (!text || text.trim().length === 0) return;
+      // Очищаем пунктуацию, оставляем кириллицу, латиницу и пробелы
+      const cleanText = text.replace(/[^a-zA-Zа-яА-Я0-9\s\-]/g, ' ').toLowerCase();
+
+      // Проверяем каждое слово словаря
+      for (const item of VOCABULARY) {
+        // 1. Поиск по русским корням/фразам учительницы
+        if (item.ru && item.ru.length > 0) {
+          for (const ruRoot of item.ru) {
+            const rootLower = ruRoot.toLowerCase();
+            // Ищем вхождение корня/фразы в речь
+            if (cleanText.includes(rootLower)) {
+              triggerMatch(item);
+              return;
+            }
+          }
+        }
+
+        // 2. Поиск по английским корням (на случай, если учительница сказала на англ.)
+        if (item.en && item.en.length > 0) {
+          for (const enRoot of item.en) {
+            const regex = new RegExp('\\b' + enRoot.toLowerCase().replace('-', '[\\s\\-]') + '\\b', 'i');
+            if (regex.test(cleanText)) {
+              triggerMatch(item);
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    function triggerMatch(item) {
+      const now = Date.now();
+      // Защита от дублей в течение 4 секунд
+      if (item.term !== lastMatchedTerm || now - lastMatchTime > 4000) {
+        lastMatchedTerm = item.term;
+        lastMatchTime = now;
+        onWordDetected(item);
+      }
+    }
+
+    // Старт
+    startBtn.addEventListener('click', () => {
+      startOverlay.style.display = 'none';
+      shouldBeListening = true;
+      initSpeech();
+      try {
+        recognition.start();
+      } catch (e) {
+        console.log(e);
+      }
+      applyConfig();
+      requestWakeLock();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && shouldBeListening) {
+        requestWakeLock();
+        if (!isListening && recognition) {
+          try { recognition.start(); } catch(e){}
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
