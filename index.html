@@ -40,7 +40,7 @@
       transition: justify-content 0.2s, align-items 0.2s;
     }
 
-    /* Позиционирование вывода подсказок */
+    /* Позиционирование подсказок */
     .pos-bottom-right { justify-content: flex-end; align-items: flex-end; }
     .pos-bottom-right #word-display { text-align: right; align-items: flex-end; }
 
@@ -104,12 +104,12 @@
       color: #141414;
     }
 
-    /* Монитор услышанной речи (ультра-стелс для контроля микрофона) */
+    /* Монитор услышанной речи (ультра-стелс) */
     #heard-monitor {
       position: absolute;
       font-size: 9px;
       color: #2a2a2a;
-      max-width: 78vw;
+      max-width: 80vw;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -135,17 +135,21 @@
       z-index: 40;
     }
     #mic-dot.listening {
-      background: #1e3a1e; /* Мягкий темно-зеленый (слушает) */
+      background: #1e3a1e;
     }
     #mic-dot.hearing {
-      background: #3bb258; /* Вспыхивает при звуке голоса */
+      background: #3bb258;
+      transform: scale(1.3);
+    }
+    #mic-dot.online-act {
+      background: #2b5c8f;
       transform: scale(1.3);
     }
     #mic-dot.reconnecting {
-      background: #544415; /* Желтый (перезапуск) */
+      background: #544415;
     }
     #mic-dot.error {
-      background: #8b2020; /* Красный (ошибка) */
+      background: #8b2020;
     }
 
     /* Плашка предупреждения об ошибке */
@@ -222,11 +226,11 @@
       align-items: center;
     }
     .setting-row {
-      margin-bottom: 13px;
+      margin-bottom: 14px;
     }
     .setting-label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       color: #888;
       font-size: 11px;
       text-transform: uppercase;
@@ -242,6 +246,40 @@
       font-size: 13px;
     }
     
+    /* Сетка режимов */
+    .mode-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .mode-btn-opt {
+      background: #151515;
+      border: 1px solid #333;
+      color: #aaa;
+      padding: 9px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.4;
+      transition: all 0.2s;
+    }
+    .mode-btn-opt .m-desc {
+      font-size: 10px;
+      color: #666;
+      display: block;
+      margin-top: 2px;
+    }
+    .mode-btn-opt.active {
+      background: #142a1b;
+      border-color: #3b7c4c;
+      color: #72e48e;
+      font-weight: 500;
+    }
+    .mode-btn-opt.active .m-desc {
+      color: #88c599;
+    }
+
     .pos-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -363,7 +401,7 @@
   <!-- Стартовый экран запроса микрофона и проверки системы -->
   <div id="start-overlay">
     <h1>BSUIR Stealth Prompter</h1>
-    <div class="badge">Модуль 3 • Уроки 1, 3, 4</div>
+    <div class="badge">Модуль 3 + Онлайн-переводчик ВСЕХ слов</div>
 
     <div id="http-warning" class="alert-box">
       ⚠️ <b>Внимание: страница открыта по HTTP!</b><br>
@@ -383,13 +421,13 @@
     </div>
 
     <p>
-      • Слушает учительницу и выводит перевод на английский.<br>
-      • <b>Слова больше НЕ исчезают</b> — горят пока не сменятся.<br>
+      • <b>2 режима:</b> Личный словарь Модуля 3 <b>+</b> Онлайн переводчик вообще ВСЕХ слов.<br>
+      • <b>Свайп ВВЕРХ 👆 :</b> переключить на <b>Онлайн-переводчик</b> / Гибрид.<br>
+      • <b>Свайп ВНИЗ 👇 :</b> переключить на <b>Личную библиотеку</b> БГУИР.<br>
       • <b>Свайп ВЛЕВО 👈 :</b> перенести текст <b>НАЛЕВО</b>.<br>
       • <b>Свайп ВПРАВО 👉 :</b> перенести текст <b>НАПРАВО</b>.<br>
-      • <b>1 тап:</b> Паника (мгновенно чернеет экран).<br>
-      • <b>2 тапа:</b> Фейковые часы (Always-On Display).<br>
-      • <b>3 тапа:</b> Настройки и диагностика звука.
+      • <b>Слова НЕ исчезают</b> — горят постоянно пока не сменятся.<br>
+      • <b>1 тап:</b> Паника • <b>2 тапа:</b> Фейковые часы • <b>3 тапа:</b> Настройки.
     </p>
 
     <button id="start-btn">ВКЛЮЧИТЬ МИКРОФОН И СКРЫТЬСЯ</button>
@@ -424,15 +462,43 @@
       <span style="cursor:pointer;" id="close-settings">✕</span>
     </h2>
 
+    <!-- ВЫБОР РЕЖИМА ПЕРЕВОДА -->
+    <div class="setting-row">
+      <label class="setting-label">Режим работы суфлёра</label>
+      <div class="mode-grid">
+        <div class="mode-btn-opt active" data-mode="hybrid">
+          ⚡ Умный гибрид (Рекомендуется)
+          <span class="m-desc">Словарь БГУИР в приоритете + онлайн перевод любых других слов</span>
+        </div>
+        <div class="mode-btn-opt" data-mode="online_only">
+          🌐 Онлайн-переводчик ВСЕХ слов
+          <span class="m-desc">Переводит вслух любую фразу преподавателя прямо с русского на английский</span>
+        </div>
+        <div class="mode-btn-opt" data-mode="dict_only">
+          📚 Только личная библиотека
+          <span class="m-desc">Реагирует строго на термины Модуля 3 (Уроки 1, 3, 4)</span>
+        </div>
+      </div>
+      <div style="font-size:10px; color:#555; margin-top:5px;">
+        💡 <b>Быстрое переключение свайпом на экране:</b><br>
+        • Свайп ВВЕРХ 👆 — Онлайн переводчик / Гибрид<br>
+        • Свайп ВНИЗ 👇 — Личная библиотека
+      </div>
+    </div>
+
     <!-- ДИАГНОСТИКА МИКРОФОНА -->
     <div class="setting-row">
-      <label class="setting-label">Диагностика микрофона (в реальном времени)</label>
+      <label class="setting-label">Диагностика микрофона и перевода</label>
       <div class="diag-box">
-        <div>Статус: <span id="diag-mic-status" class="diag-val">Инициализация...</span></div>
-        <div style="margin-top:4px;">Слышит голос: <span id="diag-live-speech" style="color:#ddd;">[тишина]</span></div>
-        <div style="margin-top:4px;">Последнее совпадение: <span id="diag-last-match" class="diag-val">[нет]</span></div>
+        <div>Текущий режим: <span id="diag-current-mode" class="diag-val">Умный гибрид</span></div>
+        <div style="margin-top:3px;">Статус микрофона: <span id="diag-mic-status" class="diag-val">Инициализация...</span></div>
+        <div style="margin-top:3px;">Слышит голос: <span id="diag-live-speech" style="color:#ddd;">[тишина]</span></div>
+        <div style="margin-top:3px;">Последний ответ: <span id="diag-last-match" class="diag-val">[нет]</span></div>
       </div>
-      <button class="btn" id="test-word-btn" style="margin-top:6px;">Случайное тестовое слово</button>
+      <div style="display:flex; gap:6px; margin-top:6px;">
+        <button class="btn" id="test-word-btn" style="flex:1;">Тест словаря</button>
+        <button class="btn" id="test-online-btn" style="flex:1;">Тест онлайн-перевода</button>
+      </div>
     </div>
 
     <!-- ВЫБОР РАСПОЛОЖЕНИЯ: СЛЕВА ИЛИ СПРАВА -->
@@ -443,9 +509,6 @@
         <div class="pos-btn-opt active" data-pos="pos-bottom-right">Справа внизу ↘</div>
         <div class="pos-btn-opt" data-pos="pos-top-left">Слева вверху ↖</div>
         <div class="pos-btn-opt" data-pos="pos-top-right">Справа вверху ↗</div>
-      </div>
-      <div style="font-size:10px; color:#555; margin-top:4px;">
-        💡 Можно менять на лету свайпом влево или вправо прямо по экрану!
       </div>
     </div>
 
@@ -475,15 +538,12 @@
         <option value="on" selected>Включено (показывать микро-текстом 9px в углу)</option>
         <option value="off">Отключено (полная темнота)</option>
       </select>
-      <div style="font-size:10px; color:#555; margin-top:3px;">
-        Показывает темно-серыми буквами текущую фразу, которую слышит телефон.
-      </div>
     </div>
 
     <div class="setting-row">
-      <label class="setting-label">Русское пояснение под словом</label>
+      <label class="setting-label">Русский подстрочник под английским ответом</label>
       <select id="setting-translation">
-        <option value="yes" selected>Показывать русское пояснение</option>
+        <option value="yes" selected>Показывать русский подстрочник</option>
         <option value="no">Только английский ответ</option>
       </select>
     </div>
@@ -510,7 +570,7 @@
       <label class="setting-label">Статус словаря:</label>
       <div style="font-size:12px; color:#666; line-height:1.4;">
         ✓ Загружено терминов: <b id="vocab-count-badge" style="color:#72e48e;">...</b><br>
-        ✓ Модуль 3: Уроки 1, 3, 4 (BSUIR)
+        ✓ Модуль 3: Уроки 1, 3, 4 (BSUIR) + Google/MyMemory онлайн-переводчик
       </div>
     </div>
 
@@ -888,9 +948,11 @@
     const startOverlay = document.getElementById('start-overlay');
     const startBtn = document.getElementById('start-btn');
     const posButtons = document.querySelectorAll('.pos-btn-opt');
+    const modeButtons = document.querySelectorAll('.mode-btn-opt');
     const diagMicStatus = document.getElementById('diag-mic-status');
     const diagLiveSpeech = document.getElementById('diag-live-speech');
     const diagLastMatch = document.getElementById('diag-last-match');
+    const diagCurrentMode = document.getElementById('diag-current-mode');
 
     let isHidden = false;
     let isFakeClock = false;
@@ -901,6 +963,7 @@
 
     // Конфигурация приложения
     let config = {
+      mode: 'hybrid', // 'hybrid' | 'online_only' | 'dict_only'
       fontSize: 14,
       brightness: 'dim',
       position: 'pos-bottom-right',
@@ -922,6 +985,12 @@
       'dim':       { main: '#3a3a3a', trans: '#242424', hist: '#1c1c1c', mon: '#262626' },
       'medium':    { main: '#555555', trans: '#363636', hist: '#242424', mon: '#333333' },
       'light':     { main: '#787878', trans: '#4c4c4c', hist: '#303030', mon: '#444444' }
+    };
+
+    const MODE_NAMES = {
+      'hybrid': '⚡ Умный гибрид (Библиотека + Онлайн)',
+      'online_only': '🌐 Онлайн-переводчик ВСЕХ слов',
+      'dict_only': '📚 Только личная библиотека'
     };
 
     function saveConfig() {
@@ -954,7 +1023,59 @@
       posButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.pos === config.position);
       });
+
+      modeButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === config.mode);
+      });
+
+      if (diagCurrentMode) {
+        diagCurrentMode.textContent = MODE_NAMES[config.mode] || config.mode;
+      }
     }
+
+    // ==============================================================
+    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМА ПЕРЕВОДА (БИБЛИОТЕКА / ОНЛАЙН / ГИБРИД)
+    // ==============================================================
+    function switchTranslateMode(target) {
+      const MODES = ['hybrid', 'online_only', 'dict_only'];
+      if (target === 'next') {
+        const idx = MODES.indexOf(config.mode);
+        config.mode = MODES[(idx + 1) % MODES.length];
+      } else if (target === 'prev') {
+        const idx = MODES.indexOf(config.mode);
+        config.mode = MODES[(idx - 1 + MODES.length) % MODES.length];
+      } else if (MODES.includes(target)) {
+        config.mode = target;
+      }
+
+      applyConfig();
+      saveConfig();
+
+      // Уведомление на черном экране в углу
+      const title = MODE_NAMES[config.mode];
+      heardMonitor.textContent = `[${title}]`;
+      heardMonitor.style.opacity = '1';
+
+      // Индикатор микрофона вспыхивает
+      micDot.className = (config.mode === 'online_only' ? 'online-act' : 'hearing');
+      setTimeout(() => {
+        if (isRecognizing) micDot.className = 'listening';
+      }, 450);
+
+      setTimeout(() => {
+        if (heardMonitor.textContent.includes(title)) {
+          heardMonitor.textContent = '';
+        }
+      }, 2000);
+    }
+
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        config.mode = btn.dataset.mode;
+        applyConfig();
+        saveConfig();
+      });
+    });
 
     // ==============================================================
     // БЫСТРАЯ СМЕНА СТОРОНЫ (СЛЕВА / СПРАВА)
@@ -969,7 +1090,6 @@
       applyConfig();
       saveConfig();
       
-      // Незаметная вспышка точки в подтверждение
       micDot.classList.add('hearing');
       setTimeout(() => micDot.classList.remove('hearing'), 200);
     }
@@ -1004,7 +1124,7 @@
     updateClock();
 
     // ==============================================================
-    // СЕНСОРНОЕ УПРАВЛЕНИЕ: СВАЙПЫ ВЛЕВО/ВПРАВО + ТАПЫ
+    // СЕНСОРНОЕ УПРАВЛЕНИЕ: СВАЙПЫ (4 НАПРАВЛЕНИЯ) + ТАПЫ
     // ==============================================================
     let touchStartX = 0;
     let touchStartY = 0;
@@ -1030,13 +1150,26 @@
         const deltaY = e.changedTouches[0].clientY - touchStartY;
         const deltaTime = Date.now() - touchStartTime;
 
-        // Если это горизонтальный свайп: смещение > 40px, время < 450мс
+        // Горизонтальный свайп: смещение > 40px
         if (deltaTime < 450 && Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
           isSwipeDetected = true;
           if (deltaX > 0) {
-            switchSide('right'); // Свайп вправо
+            switchSide('right'); // Свайп вправо -> текст направо
           } else {
-            switchSide('left');  // Свайп влево
+            switchSide('left');  // Свайп влево -> текст налево
+          }
+          return;
+        }
+
+        // Вертикальный свайп: смещение > 40px
+        if (deltaTime < 450 && Math.abs(deltaY) > 40 && Math.abs(deltaY) > Math.abs(deltaX) * 1.3) {
+          isSwipeDetected = true;
+          if (deltaY < 0) {
+            // Свайп ВВЕРХ -> Включить Онлайн переводчик / Гибрид
+            switchTranslateMode('next');
+          } else {
+            // Свайп ВНИЗ -> Переключить на Личную библиотеку
+            switchTranslateMode('dict_only');
           }
           return;
         }
@@ -1113,6 +1246,7 @@
       document.getElementById('setting-history').value = config.historyCount;
       document.getElementById('setting-lang').value = config.lang;
       settingsModal.style.display = 'flex';
+      applyConfig();
     }
 
     document.getElementById('close-settings').addEventListener('click', () => {
@@ -1137,11 +1271,28 @@
       settingsModal.style.display = 'none';
     });
 
+    // Тест словаря
     document.getElementById('test-word-btn').addEventListener('click', () => {
       const sample = VOCABULARY[Math.floor(Math.random() * VOCABULARY.length)];
       onWordDetected(sample);
       if (diagLastMatch) {
-        diagLastMatch.textContent = `${sample.term} (${sample.trans})`;
+        diagLastMatch.textContent = `${sample.term} [${sample.lesson}]`;
+      }
+    });
+
+    // Тест онлайн-переводчика
+    document.getElementById('test-online-btn').addEventListener('click', async () => {
+      if (diagLiveSpeech) diagLiveSpeech.textContent = 'Тестирование онлайн-перевода...';
+      const translated = await fetchOnlineTranslation('искусственный интеллект и машинное обучение');
+      if (translated) {
+        onWordDetected({
+          term: translated,
+          trans: 'искусственный интеллект и машинное обучение',
+          lesson: 'ONLINE'
+        });
+        if (diagLastMatch) {
+          diagLastMatch.textContent = `${translated} [ONLINE]`;
+        }
       }
     });
 
@@ -1166,7 +1317,7 @@
       currentTransEl.style.color = colors.trans;
 
       if (diagLastMatch) {
-        diagLastMatch.textContent = `${item.term} (${item.trans})`;
+        diagLastMatch.textContent = `${item.term} [${item.lesson}]`;
       }
     }
 
@@ -1183,14 +1334,106 @@
         div.style.color = colors.hist;
         div.innerHTML = config.showTrans 
           ? `<b>${item.term}</b> <span class="trans">— ${item.trans.split(',')[0]}</span>`
-          : item.term;
+          : `${item.term} <span class="word-lesson">[${item.lesson}]</span>`;
         historyBoxEl.appendChild(div);
       });
     }
 
     // ==============================================================
+    // ОНЛАЙН-ПЕРЕВОДЧИК (GOOGLE TRANSLATE GTX + MYMEMORY FALLBACK)
+    // ==============================================================
+    const translationCache = new Map();
+    let onlineTranslateTimer = null;
+    let lastOnlineSource = '';
+
+    async function fetchOnlineTranslation(text) {
+      const trimmed = text.trim();
+      if (!trimmed || trimmed.length < 2) return null;
+
+      const cacheKey = trimmed.toLowerCase();
+      if (translationCache.has(cacheKey)) {
+        return translationCache.get(cacheKey);
+      }
+
+      // 1. Google Translate GTX API (Быстрый, точный, без ключа)
+      try {
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=en&dt=t&q=' + encodeURIComponent(trimmed);
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data[0] && Array.isArray(data[0])) {
+            const translated = data[0].map(s => s[0]).filter(Boolean).join('').trim();
+            if (translated) {
+              translationCache.set(cacheKey, translated);
+              return translated;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Google GTX fallback triggered:", err);
+      }
+
+      // 2. Резервный MyMemory API
+      try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=ru|en`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.responseData && data.responseData.translatedText) {
+            const translated = data.responseData.translatedText.trim();
+            if (translated && !translated.startsWith("MYMEMORY WARNING")) {
+              translationCache.set(cacheKey, translated);
+              return translated;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("MyMemory fallback failed:", err);
+      }
+
+      return null;
+    }
+
+    function cancelPendingOnlineTranslation() {
+      if (onlineTranslateTimer) {
+        clearTimeout(onlineTranslateTimer);
+        onlineTranslateTimer = null;
+      }
+    }
+
+    function scheduleOnlineTranslation(phrase, isFinal) {
+      const trimmed = phrase.trim();
+      if (!trimmed || trimmed.length < 2) return;
+      if (normalizeText(trimmed) === normalizeText(lastOnlineSource)) return;
+
+      cancelPendingOnlineTranslation();
+
+      // Задержка: 200мс если фраза закончена, 650мс если еще говорит
+      const delay = isFinal ? 200 : 650;
+
+      onlineTranslateTimer = setTimeout(async () => {
+        // Если в гибридном режиме уже совпало словарное слово — отменяем
+        if (config.mode === 'hybrid' && searchInVocabulary(normalizeText(trimmed))) {
+          return;
+        }
+
+        micDot.classList.add('online-act');
+        const translated = await fetchOnlineTranslation(trimmed);
+        micDot.classList.remove('online-act');
+
+        if (translated) {
+          lastOnlineSource = trimmed;
+          onWordDetected({
+            term: translated,
+            trans: trimmed,
+            lesson: 'ONLINE'
+          });
+        }
+      }, delay);
+    }
+
+    // ==============================================================
     // СТАБИЛЬНЫЙ ДВИЖОК РАСПОЗНАВАНИЯ РЕЧИ (WEB SPEECH API)
-    // Без getUserMedia конфликтов!
     // ==============================================================
     let recognition = null;
     let isRecognizing = false;
@@ -1221,6 +1464,9 @@
         } else if (state === 'hearing') {
           diagMicStatus.textContent = '🟢 Слышит речь...';
           diagMicStatus.style.color = '#a6ffbc';
+        } else if (state === 'online-act') {
+          diagMicStatus.textContent = '🔵 Онлайн перевод...';
+          diagMicStatus.style.color = '#8bc34a';
         } else if (state === 'reconnecting') {
           diagMicStatus.textContent = '🟡 Переподключение...';
           diagMicStatus.style.color = '#ffd166';
@@ -1316,7 +1562,7 @@
 
           const combined = (finalText + ' ' + interimText).trim();
           if (combined) {
-            handleIncomingSpeech(combined);
+            handleIncomingSpeech(combined, !!finalText);
           }
         };
 
@@ -1326,7 +1572,6 @@
           isStarting = false;
 
           if (err === 'no-speech') {
-            // Тишина в аудитории — абсолютно штатная ситуация
             return;
           }
 
@@ -1389,7 +1634,6 @@
       }, delay);
     }
 
-    // Сторожевой таймер: раз в 3.5 секунды проверяет активность
     function startWatchdog() {
       clearInterval(watchdogTimer);
       watchdogTimer = setInterval(() => {
@@ -1400,13 +1644,12 @@
     }
 
     // ==============================================================
-    // ОБРАБОТКА РЕЧИ И ПОИСК СЛОВ В СЛОВАРЕ
+    // ОБРАБОТКА РЕЧИ И РАСПРЕДЕЛЕНИЕ ПО РЕЖИМАМ
     // ==============================================================
-    function handleIncomingSpeech(speech) {
+    function handleIncomingSpeech(speech, isFinal) {
       const clean = normalizeText(speech);
       if (!clean || clean.length < 2) return;
 
-      // Отображение в мониторе на черном экране
       if (config.showMonitor) {
         heardMonitor.textContent = '● ' + speech;
       }
@@ -1414,14 +1657,20 @@
         diagLiveSpeech.textContent = speech;
       }
 
-      // 1. Проверяем текущую услышанную фразу целиком
+      // 1. РЕЖИМ: ТОЛЬКО ОНЛАЙН-ПЕРЕВОДЧИК ВСЕХ СЛОВ
+      if (config.mode === 'online_only') {
+        scheduleOnlineTranslation(speech, isFinal);
+        return;
+      }
+
+      // 2. ДЛЯ РЕЖИМОВ 'hybrid' И 'dict_only': ПРОВЕРКА ПО БИБЛИОТЕКЕ
       const immediateMatch = searchInVocabulary(clean);
       if (immediateMatch) {
+        cancelPendingOnlineTranslation();
         triggerMatch(immediateMatch);
         return;
       }
 
-      // 2. Добавляем в скользящий буфер (последние 30 слов) на случай длинных пауз
       const words = clean.split(' ').filter(Boolean);
       rollingTokens.push(...words);
       if (rollingTokens.length > 30) {
@@ -1430,13 +1679,19 @@
       const fullBuffer = rollingTokens.join(' ');
       const bufferMatch = searchInVocabulary(fullBuffer);
       if (bufferMatch) {
+        cancelPendingOnlineTranslation();
         triggerMatch(bufferMatch);
+        return;
+      }
+
+      // 3. РЕЖИМ УМНЫЙ ГИБРИД: ЕСЛИ В СЛОВАРЕ НЕТ — ПЕРЕВОДИМ ОНЛАЙН!
+      if (config.mode === 'hybrid') {
+        scheduleOnlineTranslation(speech, isFinal);
       }
     }
 
     function searchInVocabulary(text) {
       for (const item of VOCABULARY) {
-        // Русские правила
         if (item.ruRules && item.ruRules.length > 0) {
           for (const rule of item.ruRules) {
             if (Array.isArray(rule)) {
@@ -1448,7 +1703,6 @@
           }
         }
 
-        // Английские правила (если учительница назвала английское слово)
         if (item.enRules && item.enRules.length > 0) {
           for (const enPhrase of item.enRules) {
             const enClean = normalizeText(enPhrase);
@@ -1465,7 +1719,7 @@
         lastMatchedTerm = item.term;
         lastMatchTime = now;
         onWordDetected(item);
-        rollingTokens = []; // Очищаем буфер после успешного попадания
+        rollingTokens = [];
       }
     }
 
