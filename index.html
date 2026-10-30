@@ -107,42 +107,67 @@
     /* Монитор услышанной речи (ультра-стелс для контроля микрофона) */
     #heard-monitor {
       position: absolute;
-      font-size: 8px;
-      color: #151515;
-      max-width: 75vw;
+      font-size: 9px;
+      color: #2a2a2a;
+      max-width: 78vw;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
       pointer-events: none;
       transition: opacity 0.3s;
+      letter-spacing: 0.2px;
     }
-    .mon-top-left { top: 10px; left: 16px; text-align: left; }
-    .mon-top-right { top: 10px; right: 16px; text-align: right; }
-    .mon-bottom-left { bottom: 10px; left: 16px; text-align: left; }
-    .mon-bottom-right { bottom: 10px; right: 16px; text-align: right; }
+    .mon-top-left { top: 12px; left: 16px; text-align: left; }
+    .mon-top-right { top: 12px; right: 16px; text-align: right; }
+    .mon-bottom-left { bottom: 12px; left: 16px; text-align: left; }
+    .mon-bottom-right { bottom: 12px; right: 16px; text-align: right; }
 
-    /* Крошечный индикатор активности микрофона (1 пиксель) */
+    /* Индикатор активности микрофона */
     #mic-dot {
       position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 3px;
-      height: 3px;
+      top: 8px;
+      right: 8px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
-      background: #111111;
-      transition: background 0.2s;
+      background: #181818;
+      transition: background 0.25s, transform 0.25s;
+      z-index: 40;
     }
     #mic-dot.listening {
-      background: #1d2c1d;
+      background: #1e3a1e; /* Мягкий темно-зеленый (слушает) */
     }
-    #mic-dot.pulse {
-      background: #2b452b; /* Подмигивает при приеме речи */
+    #mic-dot.hearing {
+      background: #3bb258; /* Вспыхивает при звуке голоса */
+      transform: scale(1.3);
+    }
+    #mic-dot.reconnecting {
+      background: #544415; /* Желтый (перезапуск) */
     }
     #mic-dot.error {
-      background: #3a1818;
+      background: #8b2020; /* Красный (ошибка) */
     }
 
-    /* Фейковые часы (маскировка под заблокированный экран Always-On Display) */
+    /* Плашка предупреждения об ошибке */
+    #error-banner {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      background: rgba(60, 15, 15, 0.92);
+      border: 1px solid #7a2626;
+      color: #ffbfbf;
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 10px 14px;
+      border-radius: 8px;
+      z-index: 90;
+      text-align: center;
+      cursor: pointer;
+      display: none;
+    }
+
+    /* Фейковые часы (Always-On Display) */
     #fake-screen {
       position: absolute;
       inset: 0;
@@ -158,20 +183,21 @@
     #fake-screen .fake-time {
       font-size: 34px;
       color: #1c1c1c;
-      font-weight: 200;
+      font-weight: 300;
     }
     #fake-screen .fake-date {
-      font-size: 10px;
-      color: #161616;
-      margin-top: 5px;
+      font-size: 11px;
+      color: #131313;
+      margin-top: 4px;
     }
 
+    /* Скрытая кнопка для открытия меню настроек */
     #hidden-trigger {
       position: absolute;
-      top: 0;
+      bottom: 0;
       left: 0;
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       z-index: 10;
       opacity: 0;
     }
@@ -180,29 +206,27 @@
     #settings-modal {
       position: absolute;
       inset: 0;
-      background: rgba(6, 6, 6, 0.97);
+      background: rgba(8, 8, 8, 0.98);
       display: none;
       flex-direction: column;
-      padding: 22px 18px;
-      color: #aaa;
-      font-size: 13px;
+      padding: 18px 20px;
       overflow-y: auto;
       z-index: 99;
     }
     #settings-modal h2 {
       font-size: 15px;
       color: #eee;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .setting-row {
-      margin-bottom: 14px;
+      margin-bottom: 13px;
     }
     .setting-label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       color: #888;
       font-size: 11px;
       text-transform: uppercase;
@@ -258,6 +282,21 @@
       color: #9ff0b0;
     }
 
+    /* Диагностический блок в меню */
+    .diag-box {
+      background: #121212;
+      border: 1px solid #282828;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #aaa;
+    }
+    .diag-val {
+      color: #72e48e;
+      font-weight: 500;
+    }
+
     #start-overlay {
       position: absolute;
       inset: 0;
@@ -266,10 +305,11 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 24px;
+      padding: 22px;
       text-align: center;
       color: #888;
       z-index: 100;
+      overflow-y: auto;
     }
     #start-overlay h1 {
       font-size: 16px;
@@ -287,9 +327,22 @@
     }
     #start-overlay p {
       font-size: 12px;
-      color: #666;
+      color: #777;
       line-height: 1.5;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .alert-box {
+      background: rgba(90, 20, 20, 0.4);
+      border: 1px solid #993333;
+      color: #ffb3b3;
+      font-size: 11px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      text-align: left;
+      line-height: 1.45;
+      display: none;
     }
     #start-btn {
       background: #153119;
@@ -300,33 +353,54 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
+      width: 100%;
+      max-width: 320px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Стартовый экран запроса микрофона -->
+  <!-- Стартовый экран запроса микрофона и проверки системы -->
   <div id="start-overlay">
     <h1>BSUIR Stealth Prompter</h1>
-    <div class="badge">Улучшенное распознавание • Модуль 3 (Уроки 1, 3, 4)</div>
+    <div class="badge">Модуль 3 • Уроки 1, 3, 4</div>
+
+    <div id="http-warning" class="alert-box">
+      ⚠️ <b>Внимание: страница открыта по HTTP!</b><br>
+      Google Chrome на смартфонах блокирует микрофон на сайтах без HTTPS.<br>
+      Для работы используйте <b>GitHub Pages</b> (https://ваш-логин.github.io/...).
+    </div>
+
+    <div id="inapp-warning" class="alert-box">
+      ⚠️ <b>Открыто внутри мессенджера (Telegram/VK/WhatsApp)!</b><br>
+      Встроенный браузер мессенджера блокирует микрофон.<br>
+      Нажмите <b>три точки (⋮)</b> в углу и выберите <b>«Открыть в Chrome»</b>.
+    </div>
+
+    <div id="nospeech-warning" class="alert-box">
+      ⚠️ <b>Speech Recognition не поддерживается в этом браузере!</b><br>
+      Пожалуйста, откройте страницу в официальном <b>Google Chrome</b> на Android.
+    </div>
+
     <p>
-      Слушает русскую речь преподавателя и выдаёт английский ответ.<br>
-      <b>Текст больше не исчезает через 15 секунд</b> — висит пока не сменится.<br><br>
-      <b>Стелс-жесты на черном экране:</b><br>
-      • <b>Свайп ВЛЕВО 👈 :</b> Мгновенно переносит текст <b>НАЛЕВО</b><br>
-      • <b>Свайп ВПРАВО 👉 :</b> Мгновенно переносит текст <b>НАПРАВО</b><br>
-      • <b>1 тап:</b> Паника (мгновенно чернеет экран в 0%)<br>
-      • <b>2 тапа:</b> Фейковые часы Always-On Display<br>
-      • <b>3 тапа:</b> Меню настроек
+      • Слушает учительницу и выводит перевод на английский.<br>
+      • <b>Слова больше НЕ исчезают</b> — горят пока не сменятся.<br>
+      • <b>Свайп ВЛЕВО 👈 :</b> перенести текст <b>НАЛЕВО</b>.<br>
+      • <b>Свайп ВПРАВО 👉 :</b> перенести текст <b>НАПРАВО</b>.<br>
+      • <b>1 тап:</b> Паника (мгновенно чернеет экран).<br>
+      • <b>2 тапа:</b> Фейковые часы (Always-On Display).<br>
+      • <b>3 тапа:</b> Настройки и диагностика звука.
     </p>
+
     <button id="start-btn">ВКЛЮЧИТЬ МИКРОФОН И СКРЫТЬСЯ</button>
   </div>
 
   <!-- Главный стелс-контейнер -->
   <div id="stealth-container" class="pos-bottom-right">
     <div id="hidden-trigger" title="Настройки"></div>
-    <div id="mic-dot"></div>
-    <div id="heard-monitor" class="mon-top-left" style="display:none;"></div>
+    <div id="mic-dot" title="Статус микрофона"></div>
+    <div id="error-banner"></div>
+    <div id="heard-monitor" class="mon-top-left"></div>
 
     <div id="word-display">
       <div id="current-box">
@@ -343,12 +417,23 @@
     <div class="fake-date" id="clock-date">Понедельник, 15 мая</div>
   </div>
 
-  <!-- Меню настроек -->
+  <!-- Меню настроек и диагностики -->
   <div id="settings-modal">
     <h2>
       <span>Настройки суфлёра</span>
       <span style="cursor:pointer;" id="close-settings">✕</span>
     </h2>
+
+    <!-- ДИАГНОСТИКА МИКРОФОНА -->
+    <div class="setting-row">
+      <label class="setting-label">Диагностика микрофона (в реальном времени)</label>
+      <div class="diag-box">
+        <div>Статус: <span id="diag-mic-status" class="diag-val">Инициализация...</span></div>
+        <div style="margin-top:4px;">Слышит голос: <span id="diag-live-speech" style="color:#ddd;">[тишина]</span></div>
+        <div style="margin-top:4px;">Последнее совпадение: <span id="diag-last-match" class="diag-val">[нет]</span></div>
+      </div>
+      <button class="btn" id="test-word-btn" style="margin-top:6px;">Случайное тестовое слово</button>
+    </div>
 
     <!-- ВЫБОР РАСПОЛОЖЕНИЯ: СЛЕВА ИЛИ СПРАВА -->
     <div class="setting-row">
@@ -385,13 +470,13 @@
     </div>
 
     <div class="setting-row">
-      <label class="setting-label">Контроль распознавания (что слышит телефон)</label>
+      <label class="setting-label">Контроль распознавания (что слышит микрофон)</label>
       <select id="setting-monitor">
-        <option value="off" selected>Отключено (максимальный стелс)</option>
-        <option value="on">Включено (показывать микро-текстом 8px)</option>
+        <option value="on" selected>Включено (показывать микро-текстом 9px в углу)</option>
+        <option value="off">Отключено (полная темнота)</option>
       </select>
       <div style="font-size:10px; color:#555; margin-top:3px;">
-        Позволяет видеть в противоположном углу, какие слова сейчас слышит микрофон.
+        Показывает темно-серыми буквами текущую фразу, которую слышит телефон.
       </div>
     </div>
 
@@ -429,14 +514,12 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" id="save-settings-btn">Применить и вернуться</button>
-    <button class="btn" id="test-word-btn" style="margin-top:6px;">Проверить случайное слово</button>
+    <button class="btn btn-primary" id="save-settings-btn" style="margin-top:10px;">Сохранить и вернуться</button>
   </div>
 
   <script>
     // ==============================================================
-    // БАЗА СЛОВАРЯ БГУИР: МОДУЛЬ 3 (УРОКИ 1, 3, 4)
-    // УЛЬТРА-ГИБКИЙ МНОГОКОМПОНЕНТНЫЙ МАТЧИНГ
+    // БАЗА СЛОВ: УРОКИ 1, 3, 4 (МОДУЛЬ 3) + 13 ОБЯЗАТЕЛЬНЫХ ФРАЗ
     // ==============================================================
     const VOCABULARY = [
       // ------------------------------------------------------------
@@ -449,10 +532,11 @@
         ruRules: [
           ["поддержк"],
           ["поддерж"],
-          ["техподдержк"],
           ["хелпдеск"],
-          ["хелп", "деск"],
-          ["help", "desk"]
+          ["техподдержк"],
+          ["служба", "поддержк"],
+          ["специалист", "поддержк"],
+          ["хелп", "деск"]
         ],
         enRules: ["help desk technician", "help desk", "helpdesk"]
       },
@@ -464,7 +548,8 @@
           ["коллег"],
           ["колег"],
           ["калег"],
-          ["калек"]
+          ["коллега"],
+          ["коллеги"]
         ],
         enRules: ["colleague", "colleagues"]
       },
@@ -473,11 +558,11 @@
         trans: "Инженер по аппаратному обеспечению", 
         lesson: "L3", 
         ruRules: [
-          ["аппаратн", "обеспечен"],
-          ["аппаратн", "инженер"],
+          ["аппаратн"],
+          ["аппарат", "обеспечен"],
           ["инженер", "аппарат"],
           ["инженер", "желез"],
-          ["железо", "компьютер"],
+          ["железо"],
           ["хардвер"]
         ],
         enRules: ["hardware engineer"]
@@ -487,67 +572,15 @@
         trans: "инженер-программист", 
         lesson: "L3", 
         ruRules: [
+          ["программист"],
           ["инженер", "программ"],
+          ["инженер", "программист"],
           ["инженер", "софт"],
+          ["софтвер"],
           ["программн", "обеспечен"],
-          ["разработчик", "по"],
-          ["софтвер", "инженер"]
+          ["разработчик", "по"]
         ],
         enRules: ["software engineer"]
-      },
-      { 
-        term: "IT security specialist", 
-        trans: "специалист по безопасности", 
-        lesson: "L3", 
-        ruRules: [
-          ["специалист", "безопасн"],
-          ["информационн", "безопасн"],
-          ["кибербезопасн"],
-          ["безопасник"],
-          ["защит", "информац"],
-          ["информационная", "защит"]
-        ],
-        enRules: ["security specialist", "it security", "cyber security"]
-      },
-      { 
-        term: "systems analyst", 
-        trans: "Системный аналитик", 
-        lesson: "L3", 
-        ruRules: [
-          ["системн", "аналитик"],
-          ["аналитик", "систем"],
-          ["системная", "аналитик"]
-        ],
-        enRules: ["systems analyst", "system analyst"]
-      },
-      { 
-        term: "video game developer", 
-        trans: "Разработчик игр", 
-        lesson: "L3", 
-        ruRules: [
-          ["разработчик", "игр"],
-          ["создатель", "игр"],
-          ["разработка", "игр"],
-          ["видеоигр"],
-          ["геймдев"],
-          ["гейм", "дев"]
-        ],
-        enRules: ["video game developer", "game developer"]
-      },
-      { 
-        term: "human resources department", 
-        trans: "отдел кадров", 
-        lesson: "L1", 
-        ruRules: [
-          ["отдел", "кадр"],
-          ["кадров", "отдел"],
-          ["служба", "кадр"],
-          ["кадры"],
-          ["кадровик"],
-          ["эйчар"],
-          ["управлен", "персонал"]
-        ],
-        enRules: ["human resources", "hr department"]
       },
       { 
         term: "Chief Executive Officer (CEO)", 
@@ -564,34 +597,6 @@
         enRules: ["chief executive officer", "ceo"]
       },
       { 
-        term: "meet goals", 
-        trans: "Достигать целей", 
-        lesson: "L1", 
-        ruRules: [
-          ["достиг", "цел"],
-          ["достич", "цел"],
-          ["достижен", "цел"],
-          ["выполн", "цел"],
-          ["поставленн", "цел"],
-          ["добива", "цел"]
-        ],
-        enRules: ["meet goals", "achieve goals"]
-      },
-      { 
-        term: "be devoid of", 
-        trans: "Быть лишенным", 
-        lesson: "L1", 
-        ruRules: [
-          ["лишен"],
-          ["лишенн"],
-          ["лишена"],
-          ["лишены"],
-          ["лишено"],
-          ["быть лишен"]
-        ],
-        enRules: ["devoid of", "be devoid"]
-      },
-      { 
         term: "unbiased", 
         trans: "Объективный, беспристрастный", 
         lesson: "L1", 
@@ -599,7 +604,7 @@
           ["беспристрастн"],
           ["непредвзят"],
           ["объективн"],
-          ["объективность"]
+          ["объективност"]
         ],
         enRules: ["unbiased"]
       },
@@ -615,12 +620,91 @@
         ],
         enRules: ["demanding job"]
       },
+      { 
+        term: "human resources department", 
+        trans: "отдел кадров", 
+        lesson: "L1", 
+        ruRules: [
+          ["отдел", "кадр"],
+          ["кадры"],
+          ["кадровик"],
+          ["эйчар"],
+          ["персонал", "отдел"]
+        ],
+        enRules: ["human resources", "hr department"]
+      },
+      { 
+        term: "video game developer", 
+        trans: "Разработчик игр", 
+        lesson: "L3", 
+        ruRules: [
+          ["разработчик", "игр"],
+          ["создатель", "игр"],
+          ["разработка", "игр"],
+          ["видеоигр"],
+          ["геймдев"],
+          ["игры", "разработ"]
+        ],
+        enRules: ["video game developer", "game developer"]
+      },
+      { 
+        term: "systems analyst", 
+        trans: "Системный аналитик", 
+        lesson: "L3", 
+        ruRules: [
+          ["системн", "аналитик"],
+          ["аналитик", "систем"]
+        ],
+        enRules: ["systems analyst", "system analyst"]
+      },
+      { 
+        term: "IT security specialist", 
+        trans: "специалист по безопасности", 
+        lesson: "L3", 
+        ruRules: [
+          ["специалист", "безопасн"],
+          ["информационн", "безопасн"],
+          ["кибербезопасн"],
+          ["безопасник"],
+          ["безопасност"],
+          ["защит", "информац"]
+        ],
+        enRules: ["security specialist", "it security", "cyber security"]
+      },
+      { 
+        term: "meet goals", 
+        trans: "Достигать целей", 
+        lesson: "L1", 
+        ruRules: [
+          ["достиг", "цел"],
+          ["достиж", "цел"],
+          ["достич", "цел"],
+          ["достижени"],
+          ["выполн", "цел"],
+          ["поставленн", "цел"]
+        ],
+        enRules: ["meet goals", "achieve goals"]
+      },
+      { 
+        term: "be devoid of", 
+        trans: "Быть лишенным", 
+        lesson: "L1", 
+        ruRules: [
+          ["лишен"],
+          ["лишена"],
+          ["лишены"],
+          ["лишено"],
+          ["лишенн"],
+          ["быть", "лишен"]
+        ],
+        enRules: ["devoid of", "be devoid"]
+      },
 
       // ------------------------------------------------------------
       // ОСТАЛЬНЫЕ СЛОВА МОДУЛЯ 3 (УРОКИ 1, 3, 4)
       // ------------------------------------------------------------
       // Lesson 1: Being a Successful Specialist
-      { term: "abide", trans: "соблюдать (правила), подчиняться", lesson: "L1", ruRules: [["соблюдать"], ["следовать", "правил"], ["подчиняться"], ["эбайд"]], enRules: ["abide"] },
+      { term: "abide", trans: "соблюдать (правила), подчиняться", lesson: "L1", ruRules: [["соблюдать"], ["следовать", "правил"], ["подчиняться"]], enRules: ["abide"] },
       { term: "adaptable", trans: "гибкий, легко приспосабливающийся", lesson: "L1", ruRules: [["адаптивн"], ["приспосаблива"], ["гибкий к"]], enRules: ["adaptable", "adapt"] },
       { term: "administration department", trans: "административный отдел", lesson: "L1", ruRules: [["административн", "отдел"], ["администрация"]], enRules: ["administration department"] },
       { term: "agenda", trans: "повестка дня", lesson: "L1", ruRules: [["повестк", "дня"], ["план", "собрания"]], enRules: ["agenda"] },
@@ -633,23 +717,23 @@
       { term: "co-worker", trans: "сослуживец, напарник по работе", lesson: "L1", ruRules: [["сослуживец"], ["напарник", "работ"], ["товарищ", "работ"]], enRules: ["co-worker", "coworker"] },
       { term: "customer service department", trans: "отдел обслуживания клиентов", lesson: "L1", ruRules: [["обслуживан", "клиент"], ["клиентск", "отдел"], ["клиентск", "служб"]], enRules: ["customer service"] },
       { term: "decisive", trans: "решительный", lesson: "L1", ruRules: [["решительн"]], enRules: ["decisive"] },
-      { term: "dedicated", trans: "преданный делу, целеустремлённый", lesson: "L1", ruRules: [["преданн", "делу"], ["целеустремленн"], ["посвятивш"]], enRules: ["dedicated"] },
-      { term: "define", trans: "определять, давать определение", lesson: "L1", ruRules: [["определять"], ["определить"], ["дать", "определение"]], enRules: ["define"] },
-      { term: "employee", trans: "сотрудник, работник, служащий", lesson: "L1", ruRules: [["сотрудник"], ["работник"], ["служащ"], ["наемн"]], enRules: ["employee"] },
-      { term: "encourage", trans: "поощрять, воодушевлять", lesson: "L1", ruRules: [["поощрять"], ["воодушевлять"], ["подбадривать"]], enRules: ["encourage"] },
-      { term: "nurture", trans: "воспитывать, взращивать, развивать", lesson: "L1", ruRules: [["взращивать"], ["воспитывать"], ["вскармливать"]], enRules: ["nurture"] },
+      { term: "dedicated", trans: "преданный делу, целеустремлённый", lesson: "L1", ruRules: [["преданн", "делу"], ["целеустремленн"]], enRules: ["dedicated"] },
+      { term: "define", trans: "определять, давать определение", lesson: "L1", ruRules: [["определять"], ["определить"]], enRules: ["define"] },
+      { term: "employee", trans: "сотрудник, работник, служащий", lesson: "L1", ruRules: [["сотрудник"], ["работник"], ["служащ"]], enRules: ["employee"] },
+      { term: "encourage", trans: "поощрять, воодушевлять", lesson: "L1", ruRules: [["поощрять"], ["воодушевлять"]], enRules: ["encourage"] },
+      { term: "nurture", trans: "воспитывать, взращивать, развивать", lesson: "L1", ruRules: [["взращивать"], ["воспитывать"]], enRules: ["nurture"] },
       { term: "open-mindedness", trans: "непредубеждённость, широта взглядов", lesson: "L1", ruRules: [["непредубежденност"], ["открытость", "нов"], ["широта", "взгляд"]], enRules: ["open-mindedness"] },
-      { term: "passionate", trans: "увлечённый, горящий делом", lesson: "L1", ruRules: [["увлеченн"], ["страстн"], ["горящий", "делом"]], enRules: ["passionate"] },
+      { term: "passionate", trans: "увлечённый, горящий делом", lesson: "L1", ruRules: [["увлеченн"], ["страстн"]], enRules: ["passionate"] },
       { term: "people-focused", trans: "ориентированный на людей", lesson: "L1", ruRules: [["ориентирован", "люд"]], enRules: ["people-focused"] },
-      { term: "perseverance", trans: "настойчивость, упорство", lesson: "L1", ruRules: [["настойчивост"], ["упорств"], ["стойкост"]], enRules: ["perseverance"] },
+      { term: "perseverance", trans: "настойчивость, упорство", lesson: "L1", ruRules: [["настойчивост"], ["упорств"]], enRules: ["perseverance"] },
       { term: "preference", trans: "предпочтение", lesson: "L1", ruRules: [["предпочтени"], ["предпочитать"]], enRules: ["preference"] },
-      { term: "prod", trans: "подталкивать, побуждать", lesson: "L1", ruRules: [["подталкивать"], ["побуждать"], ["подгонять"]], enRules: ["prod"] },
+      { term: "prod", trans: "подталкивать, побуждать", lesson: "L1", ruRules: [["подталкивать"], ["побуждать"]], enRules: ["prod"] },
       { term: "production and QA department", trans: "отдел производства и контроля качества", lesson: "L1", ruRules: [["контрол", "качеств"], ["отдел", "качеств"], ["кью эй"]], enRules: ["quality assurance", "qa"] },
       { term: "proficiency", trans: "мастерство, уровень квалификации", lesson: "L1", ruRules: [["уровень", "владения"], ["мастерств"], ["квалификаци"]], enRules: ["proficiency"] },
-      { term: "property", trans: "свойство, качество, собственность", lesson: "L1", ruRules: [["свойств"], ["характеристик"], ["собственност"]], enRules: ["property"] },
-      { term: "reasonable", trans: "разумный, обоснованный", lesson: "L1", ruRules: [["разумн"], ["обоснованн"], ["благоразумн"]], enRules: ["reasonable"] },
+      { term: "property", trans: "свойство, качество, собственность", lesson: "L1", ruRules: [["свойств"], ["собственност"]], enRules: ["property"] },
+      { term: "reasonable", trans: "разумный, обоснованный", lesson: "L1", ruRules: [["разумн"], ["обоснованн"]], enRules: ["reasonable"] },
       { term: "responsibility", trans: "ответственность, обязанность", lesson: "L1", ruRules: [["ответственност"], ["обязанност"]], enRules: ["responsibility"] },
-      { term: "rigid", trans: "жёсткий, негибкий, строгий", lesson: "L1", ruRules: [["жестк"], ["негибк"], ["строг"], ["ригидн"]], enRules: ["rigid"] },
+      { term: "rigid", trans: "жёсткий, негибкий, строгий", lesson: "L1", ruRules: [["жестк"], ["негибк"]], enRules: ["rigid"] },
       { term: "satisfaction", trans: "удовлетворение", lesson: "L1", ruRules: [["удовлетворен"]], enRules: ["satisfaction"] },
       { term: "self-aware", trans: "понимающий себя, самосознательный", lesson: "L1", ruRules: [["самосознани"], ["понимающий", "себя"]], enRules: ["self-aware"] },
       { term: "self-esteem", trans: "самооценка, самоуважение", lesson: "L1", ruRules: [["самооценк"], ["самоуважени"]], enRules: ["self-esteem"] },
@@ -658,39 +742,39 @@
       { term: "finance department", trans: "финансовый отдел, бухгалтерия", lesson: "L1", ruRules: [["финансов", "отдел"], ["бухгалтери"]], enRules: ["finance department"] },
       { term: "get on with", trans: "ладить с кем-либо", lesson: "L1", ruRules: [["ладить", "с"], ["уживаться", "с"]], enRules: ["get on with"] },
       { term: "get rid of", trans: "избавляться от", lesson: "L1", ruRules: [["избавляться", "от"], ["избавиться", "от"]], enRules: ["get rid of"] },
-      { term: "hands-off", trans: "невмешивающийся (стиль руководства)", lesson: "L1", ruRules: [["невмешивающ"], ["хэндс офф"]], enRules: ["hands-off"] },
-      { term: "humble", trans: "скромный", lesson: "L1", ruRules: [["скромн"], ["незаносчив"]], enRules: ["humble"] },
+      { term: "hands-off", trans: "невмешивающийся (стиль руководства)", lesson: "L1", ruRules: [["невмешивающ"]], enRules: ["hands-off"] },
+      { term: "humble", trans: "скромный", lesson: "L1", ruRules: [["скромн"]], enRules: ["humble"] },
       { term: "IT department", trans: "IT-отдел", lesson: "L1", ruRules: [["ит", "отдел"], ["ай ти", "отдел"]], enRules: ["it department"] },
       { term: "leadership", trans: "лидерство, руководство", lesson: "L1", ruRules: [["лидерств"], ["руководств"]], enRules: ["leadership"] },
       { term: "marketing department", trans: "отдел маркетинга", lesson: "L1", ruRules: [["отдел", "маркетинг"]], enRules: ["marketing department"] },
       { term: "skill set", trans: "набор навыков", lesson: "L1", ruRules: [["набор", "навык"], ["скиллсет"]], enRules: ["skill set", "skillset"] },
-      { term: "strengthen", trans: "укреплять, усиливать", lesson: "L1", ruRules: [["укреплять"], ["укрепить"], ["усиливать"]], enRules: ["strengthen"] },
+      { term: "strengthen", trans: "укреплять, усиливать", lesson: "L1", ruRules: [["укреплять"], ["укрепить"]], enRules: ["strengthen"] },
       { term: "superior", trans: "начальник, вышестоящий", lesson: "L1", ruRules: [["начальник"], ["вышестоящ"]], enRules: ["superior"] },
-      { term: "supply chain management", trans: "управление цепочками поставок", lesson: "L1", ruRules: [["цепочк", "поставок"], ["цепь", "поставок"]], enRules: ["supply chain"] },
+      { term: "supply chain management", trans: "управление цепочками поставок", lesson: "L1", ruRules: [["цепочк", "поставок"]], enRules: ["supply chain"] },
       { term: "top-down leader", trans: "авторитарный лидер (сверху вниз)", lesson: "L1", ruRules: [["авторитарн", "лидер"], ["сверху", "вниз"]], enRules: ["top-down leader"] },
-      { term: "trait", trans: "черта характера, особенность", lesson: "L1", ruRules: [["черта", "характер"], ["черта"]], enRules: ["trait"] },
+      { term: "trait", trans: "черта характера, особенность", lesson: "L1", ruRules: [["черта", "характер"]], enRules: ["trait"] },
       { term: "trustworthy", trans: "надёжный, заслуживающий доверия", lesson: "L1", ruRules: [["надежн"], ["заслуживающий", "довери"]], enRules: ["trustworthy"] },
-      { term: "willingness", trans: "готовность, желание", lesson: "L1", ruRules: [["готовност"], ["желание", "работать"]], enRules: ["willingness"] },
+      { term: "willingness", trans: "готовность, желание", lesson: "L1", ruRules: [["готовност"]], enRules: ["willingness"] },
 
       // Lesson 3: My Speciality: IT Professional
       { term: "absent-minded", trans: "рассеянный", lesson: "L3", ruRules: [["рассеянн"], ["забывчив"]], enRules: ["absent-minded"] },
       { term: "accrue", trans: "накапливать(ся), начислять", lesson: "L3", ruRules: [["накапливать"], ["начислять"]], enRules: ["accrue"] },
-      { term: "advent", trans: "появление, наступление (технологии)", lesson: "L3", ruRules: [["появление", "технолог"], ["наступление", "эпох"]], enRules: ["advent"] },
+      { term: "advent", trans: "появление, наступление (технологии)", lesson: "L3", ruRules: [["появление", "технолог"]], enRules: ["advent"] },
       { term: "arrogant", trans: "высокомерный, заносчивый", lesson: "L3", ruRules: [["высокомерн"], ["заносчив"]], enRules: ["arrogant"] },
       { term: "aspiring", trans: "начинающий, стремящийся к успеху", lesson: "L3", ruRules: [["начинающ"], ["стремящийся", "успех"]], enRules: ["aspiring"] },
       { term: "hesitation", trans: "колебание, нерешительность", lesson: "L3", ruRules: [["колебани"], ["нерешительност"]], enRules: ["hesitation"] },
-      { term: "immoral", trans: "аморальный, безнравственный", lesson: "L3", ruRules: [["аморальн"], ["безнравственн"]], enRules: ["immoral"] },
+      { term: "immoral", trans: "аморальный, безнравственный", lesson: "L3", ruRules: [["аморальн"]], enRules: ["immoral"] },
       { term: "initiative", trans: "инициативный, инициатива", lesson: "L3", ruRules: [["инициатив"]], enRules: ["initiative"] },
-      { term: "intricate", trans: "сложный, запутанный, замысловатый", lesson: "L3", ruRules: [["запутанн"], ["замысловат"], ["хитроумн"]], enRules: ["intricate"] },
+      { term: "intricate", trans: "сложный, запутанный, замысловатый", lesson: "L3", ruRules: [["запутанн"], ["замысловат"]], enRules: ["intricate"] },
       { term: "investigate", trans: "исследовать, изучать, разбираться", lesson: "L3", ruRules: [["исследовать"], ["расследовать"]], enRules: ["investigate"] },
-      { term: "be capable of", trans: "быть способным на что-либо", lesson: "L3", ruRules: [["способен", "на"], ["быть", "способным"]], enRules: ["capable of"] },
+      { term: "be capable of", trans: "быть способным на что-либо", lesson: "L3", ruRules: [["способен", "на"]], enRules: ["capable of"] },
       { term: "challenging", trans: "сложный, бросающий вызов", lesson: "L3", ruRules: [["бросающий", "вызов"]], enRules: ["challenging"] },
       { term: "communicative", trans: "общительный, коммуникабельный", lesson: "L3", ruRules: [["общительн"], ["коммуникабельн"]], enRules: ["communicative"] },
-      { term: "competent at", trans: "компетентный в чём-либо", lesson: "L3", ruRules: [["компетентен", "в"], ["компетентный", "в"]], enRules: ["competent at"] },
-      { term: "competitive", trans: "конкурентоспособный", lesson: "L3", ruRules: [["конкурентоспособн"], ["соревновательн"]], enRules: ["competitive"] },
+      { term: "competent at", trans: "компетентный в чём-либо", lesson: "L3", ruRules: [["компетентен", "в"]], enRules: ["competent at"] },
+      { term: "competitive", trans: "конкурентоспособный", lesson: "L3", ruRules: [["конкурентоспособн"]], enRules: ["competitive"] },
       { term: "computer operator", trans: "оператор ЭВМ", lesson: "L3", ruRules: [["оператор", "эвм"], ["оператор", "компьютер"]], enRules: ["computer operator"] },
-      { term: "computer programmer", trans: "программист", lesson: "L3", ruRules: [["программист"], ["кодер"]], enRules: ["computer programmer", "programmer"] },
-      { term: "conscientious", trans: "добросовестный, сознательный", lesson: "L3", ruRules: [["добросовестн"], ["сознательн"]], enRules: ["conscientious"] },
+      { term: "computer programmer", trans: "программист", lesson: "L3", ruRules: [["программист"]], enRules: ["computer programmer", "programmer"] },
+      { term: "conscientious", trans: "добросовестный, сознательный", lesson: "L3", ruRules: [["добросовестн"]], enRules: ["conscientious"] },
       { term: "curious", trans: "любознательный, любопытный", lesson: "L3", ruRules: [["любознательн"], ["любопытн"]], enRules: ["curious"] },
       { term: "database administrator (DBA)", trans: "администратор баз данных (DBA)", lesson: "L3", ruRules: [["администратор", "баз"], ["база", "данных"], ["базы", "данных"], ["дба"]], enRules: ["database administrator", "dba"] },
       { term: "demanding", trans: "требовательный, трудоёмкий", lesson: "L3", ruRules: [["требовательн"], ["трудоемк"]], enRules: ["demanding"] },
@@ -698,7 +782,7 @@
       { term: "emergence", trans: "появление, возникновение", lesson: "L3", ruRules: [["появлени"], ["возникновени"]], enRules: ["emergence"] },
       { term: "escalate", trans: "обостряться, возрастать", lesson: "L3", ruRules: [["обостряться"], ["эскалировать"]], enRules: ["escalate"] },
       { term: "evaluate", trans: "оценивать", lesson: "L3", ruRules: [["оценивать"], ["оценить"]], enRules: ["evaluate"] },
-      { term: "familiarity", trans: "осведомлённость, близкое знание", lesson: "L3", ruRules: [["осведомленност"], ["знакомство", "с"]], enRules: ["familiarity"] },
+      { term: "familiarity", trans: "осведомлённость, близкое знание", lesson: "L3", ruRules: [["осведомленност"]], enRules: ["familiarity"] },
       { term: "flexible", trans: "гибкий", lesson: "L3", ruRules: [["гибк"]], enRules: ["flexible"] },
       { term: "free will", trans: "свободная воля", lesson: "L3", ruRules: [["свободная", "воля"], ["свобода", "воли"]], enRules: ["free will"] },
       { term: "get satisfaction from", trans: "получать удовлетворение от", lesson: "L3", ruRules: [["получать", "удовлетворение"]], enRules: ["get satisfaction from"] },
@@ -707,81 +791,81 @@
       { term: "have a good eye for", trans: "иметь намётанный глаз на", lesson: "L3", ruRules: [["наметан", "глаз"]], enRules: ["have a good eye for"] },
       { term: "IT project manager", trans: "менеджер IT-проектов", lesson: "L3", ruRules: [["менеджер", "проект"], ["проджект"]], enRules: ["project manager"] },
       { term: "mobile application developer", trans: "разработчик мобильных приложений", lesson: "L3", ruRules: [["мобильн", "разработчик"], ["мобильные", "приложения"]], enRules: ["mobile developer"] },
-      { term: "network specialist", trans: "сетевой специалист / инженер", lesson: "L3", ruRules: [["сетев", "специалист"], ["сетевой", "инженер"], ["специалист", "сетям"]], enRules: ["network specialist"] },
-      { term: "proliferation", trans: "быстрое распространение, разрастание", lesson: "L3", ruRules: [["распространени"], ["разрастани"]], enRules: ["proliferation"] },
-      { term: "rely on", trans: "полагаться на", lesson: "L3", ruRules: [["полагаться", "на"], ["положиться", "на"]], enRules: ["rely on"] },
+      { term: "network specialist", trans: "сетевой специалист / инженер", lesson: "L3", ruRules: [["сетев", "специалист"], ["сетевой", "инженер"]], enRules: ["network specialist"] },
+      { term: "proliferation", trans: "быстрое распространение, разрастание", lesson: "L3", ruRules: [["распространени"]], enRules: ["proliferation"] },
+      { term: "rely on", trans: "полагаться на", lesson: "L3", ruRules: [["полагаться", "на"]], enRules: ["rely on"] },
       { term: "remote", trans: "удалённый (о работе)", lesson: "L3", ruRules: [["удаленн"], ["дистанционн"]], enRules: ["remote"] },
       { term: "reputable", trans: "авторитетный, с репутацией", lesson: "L3", ruRules: [["авторитетн"], ["репутаци"]], enRules: ["reputable"] },
       { term: "requirement", trans: "требование", lesson: "L3", ruRules: [["требовани"]], enRules: ["requirement"] },
       { term: "responsible", trans: "ответственный (человек)", lesson: "L3", ruRules: [["ответственн", "человек"], ["ответственный"]], enRules: ["responsible"] },
-      { term: "selfish", trans: "эгоистичный", lesson: "L3", ruRules: [["эгоистичн"], ["эгоист"]], enRules: ["selfish"] },
+      { term: "selfish", trans: "эгоистичный", lesson: "L3", ruRules: [["эгоистичн"]], enRules: ["selfish"] },
       { term: "share experience", trans: "делиться опытом", lesson: "L3", ruRules: [["делиться", "опыт"], ["обмен", "опытом"]], enRules: ["share experience"] },
-      { term: "sneaky", trans: "скрытный, действующий исподтишка", lesson: "L3", ruRules: [["скрытн"], ["исподтишка"]], enRules: ["sneaky"] },
-      { term: "sophistication", trans: "сложность, утончённость", lesson: "L3", ruRules: [["утонченност"], ["продвинутост"]], enRules: ["sophistication"] },
+      { term: "sneaky", trans: "скрытный, действующий исподтишка", lesson: "L3", ruRules: [["скрытн"]], enRules: ["sneaky"] },
+      { term: "sophistication", trans: "сложность, утончённость", lesson: "L3", ruRules: [["утонченност"]], enRules: ["sophistication"] },
       { term: "studious", trans: "старательный, прилежный", lesson: "L3", ruRules: [["прилежн"], ["старательн"]], enRules: ["studious"] },
-      { term: "take into account", trans: "принимать во внимание, учитывать", lesson: "L3", ruRules: [["принимать", "внимание"], ["учитывать"], ["учесть"]], enRules: ["take into account"] },
-      { term: "tangible", trans: "ощутимый, материальный, реальный", lesson: "L3", ruRules: [["ощутим"], ["материальн"]], enRules: ["tangible"] },
-      { term: "troubleshoot", trans: "устранять неполадки, отладка", lesson: "L3", ruRules: [["устранять", "неполадк"], ["отладк"], ["траблшут"]], enRules: ["troubleshoot", "troubleshooting"] },
-      { term: "web developer", trans: "веб-разработчик", lesson: "L3", ruRules: [["веб", "разработчик"], ["веб", "разработка"]], enRules: ["web developer"] },
+      { term: "take into account", trans: "принимать во внимание, учитывать", lesson: "L3", ruRules: [["принимать", "внимание"], ["учитывать"]], enRules: ["take into account"] },
+      { term: "tangible", trans: "ощутимый, материальный, реальный", lesson: "L3", ruRules: [["ощутим"]], enRules: ["tangible"] },
+      { term: "troubleshoot", trans: "устранять неполадки, отладка", lesson: "L3", ruRules: [["устранять", "неполадк"], ["траблшут"]], enRules: ["troubleshoot", "troubleshooting"] },
+      { term: "web developer", trans: "веб-разработчик", lesson: "L3", ruRules: [["веб", "разработчик"]], enRules: ["web developer"] },
       { term: "work-flow", trans: "рабочий процесс", lesson: "L3", ruRules: [["рабоч", "процесс"], ["воркфлоу"]], enRules: ["work-flow", "workflow"] },
 
       // Lesson 4: Professional Development
       { term: "ability", trans: "способность, умение", lesson: "L4", ruRules: [["способност"], ["умени"]], enRules: ["ability"] },
       { term: "approach", trans: "подход, метод", lesson: "L4", ruRules: [["подход"]], enRules: ["approach"] },
-      { term: "ask for", trans: "просить о чём-либо", lesson: "L4", ruRules: [["просить", "о"], ["запрашивать"]], enRules: ["ask for"] },
+      { term: "ask for", trans: "просить о чём-либо", lesson: "L4", ruRules: [["просить", "о"]], enRules: ["ask for"] },
       { term: "attend", trans: "посещать, присутствовать", lesson: "L4", ruRules: [["посещать"], ["присутствовать"]], enRules: ["attend"] },
       { term: "attendance", trans: "посещаемость", lesson: "L4", ruRules: [["посещаемост"]], enRules: ["attendance"] },
-      { term: "break out of comfort zone", trans: "выйти из зоны комфорта", lesson: "L4", ruRules: [["выйти", "комфорт"], ["выходить", "комфорт"], ["покинуть", "комфорт"]], enRules: ["break out of comfort zone", "break out"] },
-      { term: "comfort zone", trans: "зона комфорта", lesson: "L4", ruRules: [["зона", "комфорт"], ["зоне", "комфорт"]], enRules: ["comfort zone"] },
+      { term: "break out of comfort zone", trans: "выйти из зоны комфорта", lesson: "L4", ruRules: [["выйти", "комфорт"], ["покинуть", "комфорт"]], enRules: ["break out of comfort zone", "break out"] },
+      { term: "comfort zone", trans: "зона комфорта", lesson: "L4", ruRules: [["зона", "комфорт"]], enRules: ["comfort zone"] },
       { term: "competence", trans: "компетентность, компетенция", lesson: "L4", ruRules: [["компетентност"], ["компетенци"]], enRules: ["competence"] },
-      { term: "competently", trans: "компетентно, квалифицированно", lesson: "L4", ruRules: [["компетентн"], ["квалифицированн"]], enRules: ["competently"] },
+      { term: "competently", trans: "компетентно, квалифицированно", lesson: "L4", ruRules: [["компетентн"]], enRules: ["competently"] },
       { term: "concentrate", trans: "сосредотачиваться, концентрироваться", lesson: "L4", ruRules: [["сосредотачиваться"], ["концентрироваться"]], enRules: ["concentrate"] },
-      { term: "concentration", trans: "концентрация, сосредоточенность", lesson: "L4", ruRules: [["концентраци"], ["сосредоточенност"]], enRules: ["concentration"] },
+      { term: "concentration", trans: "концентрация, сосредоточенность", lesson: "L4", ruRules: [["концентраци"]], enRules: ["concentration"] },
       { term: "concept", trans: "концепция, понятие", lesson: "L4", ruRules: [["концепци"], ["поняти"]], enRules: ["concept"] },
       { term: "conference", trans: "конференция", lesson: "L4", ruRules: [["конференци"]], enRules: ["conference"] },
-      { term: "Continuing Professional Development (CPD)", trans: "непрерывное проф. развитие", lesson: "L4", ruRules: [["непрерывн", "развити"], ["профессиональн", "развити"], ["си пи ди"]], enRules: ["continuing professional development", "cpd"] },
-      { term: "contribution", trans: "вклад, содействие", lesson: "L4", ruRules: [["вклад"], ["содействи"]], enRules: ["contribution"] },
-      { term: "employee development", trans: "развитие сотрудников", lesson: "L4", ruRules: [["развитие", "сотрудник"], ["развитие", "персонал"]], enRules: ["employee development"] },
-      { term: "job requirement", trans: "требование к должности / работе", lesson: "L4", ruRules: [["требование", "должност"], ["требования", "ваканси"]], enRules: ["job requirement"] },
+      { term: "Continuing Professional Development (CPD)", trans: "непрерывное проф. развитие", lesson: "L4", ruRules: [["непрерывн", "развити"], ["си пи ди"]], enRules: ["continuing professional development", "cpd"] },
+      { term: "contribution", trans: "вклад, содействие", lesson: "L4", ruRules: [["вклад"]], enRules: ["contribution"] },
+      { term: "employee development", trans: "развитие сотрудников", lesson: "L4", ruRules: [["развитие", "сотрудник"]], enRules: ["employee development"] },
+      { term: "job requirement", trans: "требование к должности / работе", lesson: "L4", ruRules: [["требование", "должност"]], enRules: ["job requirement"] },
       { term: "marketable", trans: "востребованный на рынке труда", lesson: "L4", ruRules: [["востребованн"]], enRules: ["marketable"] },
       { term: "mentor", trans: "наставник, ментор", lesson: "L4", ruRules: [["наставник"], ["ментор"]], enRules: ["mentor"] },
       { term: "mentoring", trans: "наставничество, менторинг", lesson: "L4", ruRules: [["наставничеств"], ["менторинг"]], enRules: ["mentoring"] },
       { term: "motivate", trans: "мотивировать", lesson: "L4", ruRules: [["мотивировать"]], enRules: ["motivate"] },
       { term: "motivating", trans: "мотивирующий", lesson: "L4", ruRules: [["мотивирующ"]], enRules: ["motivating"] },
       { term: "motivation", trans: "мотивация", lesson: "L4", ruRules: [["мотиваци"]], enRules: ["motivation"] },
-      { term: "on-the-job behaviour", trans: "поведение на рабочем месте", lesson: "L4", ruRules: [["поведение", "работ"], ["на", "рабочем", "месте"]], enRules: ["on-the-job"] },
-      { term: "peer connection", trans: "связь с коллегами / сокурсниками", lesson: "L4", ruRules: [["связь", "коллег"], ["общение", "сокурсник"]], enRules: ["peer connection"] },
-      { term: "personal development (PD)", trans: "личностное развитие", lesson: "L4", ruRules: [["личностн", "развити"], ["саморазвити"]], enRules: ["personal development"] },
+      { term: "on-the-job behaviour", trans: "поведение на рабочем месте", lesson: "L4", ruRules: [["поведение", "работ"]], enRules: ["on-the-job"] },
+      { term: "peer connection", trans: "связь с коллегами / сокурсниками", lesson: "L4", ruRules: [["связь", "коллег"]], enRules: ["peer connection"] },
+      { term: "personal development (PD)", trans: "личностное развитие", lesson: "L4", ruRules: [["личностн", "развити"]], enRules: ["personal development"] },
       { term: "personal growth", trans: "личностный рост", lesson: "L4", ruRules: [["личностн", "рост"]], enRules: ["personal growth"] },
-      { term: "practice", trans: "практика", lesson: "L4", ruRules: [["практика"], ["на", "практике"]], enRules: ["practice"] },
-      { term: "practise", trans: "практиковать(ся), тренировать", lesson: "L4", ruRules: [["практиковать"], ["упражняться"]], enRules: ["practise"] },
-      { term: "practitioner", trans: "практикующий специалист, практик", lesson: "L4", ruRules: [["практикующ", "специалист"], ["практик"]], enRules: ["practitioner"] },
+      { term: "practice", trans: "практика", lesson: "L4", ruRules: [["практика"]], enRules: ["practice"] },
+      { term: "practise", trans: "практиковать(ся), тренировать", lesson: "L4", ruRules: [["практиковать"]], enRules: ["practise"] },
+      { term: "practitioner", trans: "практикующий специалист, практик", lesson: "L4", ruRules: [["практик"]], enRules: ["practitioner"] },
       { term: "productive", trans: "продуктивный", lesson: "L4", ruRules: [["продуктивн"]], enRules: ["productive"] },
-      { term: "productivity", trans: "производительность, продуктивность", lesson: "L4", ruRules: [["производительност"], ["продуктивност"]], enRules: ["productivity"] },
-      { term: "professional degree", trans: "профессиональная степень / диплом", lesson: "L4", ruRules: [["профессиональн", "степен"], ["диплом", "вуз"]], enRules: ["professional degree"] },
+      { term: "productivity", trans: "производительность, продуктивность", lesson: "L4", ruRules: [["производительност"]], enRules: ["productivity"] },
+      { term: "professional degree", trans: "профессиональная степень / диплом", lesson: "L4", ruRules: [["диплом", "вуз"]], enRules: ["professional degree"] },
       { term: "esteem", trans: "уважение, почтение", lesson: "L4", ruRules: [["почтени"], ["уважени"]], enRules: ["esteem"] },
-      { term: "expand", trans: "расширять, развивать", lesson: "L4", ruRules: [["расширять"], ["расширить"]], enRules: ["expand"] },
+      { term: "expand", trans: "расширять, развивать", lesson: "L4", ruRules: [["расширять"]], enRules: ["expand"] },
       { term: "experience", trans: "опыт; испытывать", lesson: "L4", ruRules: [["опыт"], ["стаж"]], enRules: ["experience"] },
-      { term: "expert", trans: "эксперт, специалист", lesson: "L4", ruRules: [["эксперт"], ["профессионал"]], enRules: ["expert"] },
+      { term: "expert", trans: "эксперт, специалист", lesson: "L4", ruRules: [["эксперт"]], enRules: ["expert"] },
       { term: "exploit", trans: "использовать, эксплуатировать", lesson: "L4", ruRules: [["эксплуатировать"]], enRules: ["exploit"] },
-      { term: "exploitation of talent", trans: "раскрытие / применение таланта", lesson: "L4", ruRules: [["применение", "талант"], ["раскрытие", "талант"]], enRules: ["exploitation of talent"] },
+      { term: "exploitation of talent", trans: "раскрытие / применение таланта", lesson: "L4", ruRules: [["применение", "талант"]], enRules: ["exploitation of talent"] },
       { term: "feedback", trans: "обратная связь, отзыв", lesson: "L4", ruRules: [["обратн", "связ"], ["отзыв"], ["фидбек"]], enRules: ["feedback"] },
-      { term: "implementation", trans: "внедрение, реализация", lesson: "L4", ruRules: [["внедрени"], ["реализаци"]], enRules: ["implementation"] },
+      { term: "implementation", trans: "внедрение, реализация", lesson: "L4", ruRules: [["внедрени"]], enRules: ["implementation"] },
       { term: "increase", trans: "увеличение; повышать, расти", lesson: "L4", ruRules: [["увеличени"], ["повышаться"]], enRules: ["increase"] },
       { term: "inspiration", trans: "вдохновение", lesson: "L4", ruRules: [["вдохновени"]], enRules: ["inspiration"] },
-      { term: "inspire", trans: "вдохновлять", lesson: "L4", ruRules: [["вдохновлять"], ["вдохновить"]], enRules: ["inspire"] },
+      { term: "inspire", trans: "вдохновлять", lesson: "L4", ruRules: [["вдохновлять"]], enRules: ["inspire"] },
       { term: "inspiring", trans: "вдохновляющий", lesson: "L4", ruRules: [["вдохновляющ"]], enRules: ["inspiring"] },
-      { term: "recognise", trans: "признавать, осознавать", lesson: "L4", ruRules: [["признавать"], ["осознавать"]], enRules: ["recognise", "recognize"] },
-      { term: "reflect on", trans: "размышлять о, осмысливать", lesson: "L4", ruRules: [["размышлять", "о"], ["осмысливать"]], enRules: ["reflect on"] },
-      { term: "self-actualisation", trans: "самоактуализация, самореализация", lesson: "L4", ruRules: [["самоактуализаци"], ["самореализаци"]], enRules: ["self-actualisation"] },
-      { term: "set high goals", trans: "ставить высокие цели", lesson: "L4", ruRules: [["ставить", "высок", "цел"], ["высокие", "цели"]], enRules: ["set high goals"] },
-      { term: "skill", trans: "навык, умение", lesson: "L4", ruRules: [["навык"], ["умение"]], enRules: ["skill", "skills"] },
+      { term: "recognise", trans: "признавать, осознавать", lesson: "L4", ruRules: [["признавать"]], enRules: ["recognise", "recognize"] },
+      { term: "reflect on", trans: "размышлять о, осмысливать", lesson: "L4", ruRules: [["размышлять", "о"]], enRules: ["reflect on"] },
+      { term: "self-actualisation", trans: "самоактуализация, самореализация", lesson: "L4", ruRules: [["самоактуализаци"]], enRules: ["self-actualisation"] },
+      { term: "set high goals", trans: "ставить высокие цели", lesson: "L4", ruRules: [["высокие", "цели"], ["ставить", "цел"]], enRules: ["set high goals"] },
+      { term: "skill", trans: "навык, умение", lesson: "L4", ruRules: [["навык"]], enRules: ["skill", "skills"] },
       { term: "strategy", trans: "стратегия", lesson: "L4", ruRules: [["стратеги"]], enRules: ["strategy"] },
       { term: "tactics", trans: "тактика", lesson: "L4", ruRules: [["тактик"]], enRules: ["tactics"] },
-      { term: "trainer", trans: "инструктор, тренер", lesson: "L4", ruRules: [["тренер"], ["инструктор"]], enRules: ["trainer"] },
-      { term: "underpin", trans: "подкреплять, служить фундаментом", lesson: "L4", ruRules: [["подкреплять"], ["служить", "фундамент"]], enRules: ["underpin"] },
-      { term: "validity", trans: "обоснованность, весомость", lesson: "L4", ruRules: [["обоснованност"], ["достоверност"]], enRules: ["validity"] },
-      { term: "workshop", trans: "семинар, мастер-класс, воркшоп", lesson: "L4", ruRules: [["семинар"], ["мастер-класс"], ["мастер", "класс"], ["воркшоп"]], enRules: ["workshop"] }
+      { term: "trainer", trans: "инструктор, тренер", lesson: "L4", ruRules: [["тренер"]], enRules: ["trainer"] },
+      { term: "underpin", trans: "подкреплять, служить фундаментом", lesson: "L4", ruRules: [["подкреплять"]], enRules: ["underpin"] },
+      { term: "validity", trans: "обоснованность, весомость", lesson: "L4", ruRules: [["обоснованност"]], enRules: ["validity"] },
+      { term: "workshop", trans: "семинар, мастер-класс, воркшоп", lesson: "L4", ruRules: [["семинар"], ["мастер-класс"], ["воркшоп"]], enRules: ["workshop"] }
     ];
 
     document.getElementById('vocab-count-badge').textContent = VOCABULARY.length;
@@ -795,6 +879,7 @@
     const currentTransEl = document.getElementById('current-trans');
     const historyBoxEl = document.getElementById('history-box');
     const micDot = document.getElementById('mic-dot');
+    const errorBanner = document.getElementById('error-banner');
     const heardMonitor = document.getElementById('heard-monitor');
     const fakeScreen = document.getElementById('fake-screen');
     const clockTime = document.getElementById('clock-time');
@@ -803,6 +888,9 @@
     const startOverlay = document.getElementById('start-overlay');
     const startBtn = document.getElementById('start-btn');
     const posButtons = document.querySelectorAll('.pos-btn-opt');
+    const diagMicStatus = document.getElementById('diag-mic-status');
+    const diagLiveSpeech = document.getElementById('diag-live-speech');
+    const diagLastMatch = document.getElementById('diag-last-match');
 
     let isHidden = false;
     let isFakeClock = false;
@@ -811,14 +899,14 @@
     let tapTimer = null;
     let wakeLock = null;
 
-    // Загрузка настроек из localStorage
+    // Конфигурация приложения
     let config = {
       fontSize: 14,
       brightness: 'dim',
       position: 'pos-bottom-right',
       showTrans: true,
       historyCount: 3,
-      showMonitor: false,
+      showMonitor: true,
       lang: 'ru-RU'
     };
 
@@ -830,10 +918,10 @@
     } catch(e) {}
 
     const BRIGHTNESS_MAP = {
-      'ultra-dim': { main: '#272727', trans: '#1c1c1c', hist: '#141414', mon: '#131313' },
-      'dim':       { main: '#3a3a3a', trans: '#242424', hist: '#1c1c1c', mon: '#161616' },
-      'medium':    { main: '#555555', trans: '#363636', hist: '#242424', mon: '#202020' },
-      'light':     { main: '#787878', trans: '#4c4c4c', hist: '#303030', mon: '#282828' }
+      'ultra-dim': { main: '#272727', trans: '#1c1c1c', hist: '#141414', mon: '#1d1d1d' },
+      'dim':       { main: '#3a3a3a', trans: '#242424', hist: '#1c1c1c', mon: '#262626' },
+      'medium':    { main: '#555555', trans: '#363636', hist: '#242424', mon: '#333333' },
+      'light':     { main: '#787878', trans: '#4c4c4c', hist: '#303030', mon: '#444444' }
     };
 
     function saveConfig() {
@@ -851,10 +939,7 @@
       currentTransEl.style.color = colors.trans;
       heardMonitor.style.color = colors.mon;
 
-      container.className = '';
-      container.classList.add(config.position);
-
-      // Расположение монитора в противоположном углу
+      container.className = config.position;
       heardMonitor.className = '';
       if (config.position.includes('bottom')) {
         heardMonitor.classList.add(config.position.includes('right') ? 'mon-top-left' : 'mon-top-right');
@@ -866,7 +951,6 @@
       currentTransEl.style.display = config.showTrans ? 'block' : 'none';
       renderHistory();
 
-      // Обновить активную кнопку в настройках
       posButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.pos === config.position);
       });
@@ -881,23 +965,15 @@
         config.position = isTop ? 'pos-top-left' : 'pos-bottom-left';
       } else if (targetSide === 'right') {
         config.position = isTop ? 'pos-top-right' : 'pos-bottom-right';
-      } else {
-        // Toggle side
-        if (config.position.includes('right')) {
-          config.position = isTop ? 'pos-top-left' : 'pos-bottom-left';
-        } else {
-          config.position = isTop ? 'pos-top-right' : 'pos-bottom-right';
-        }
       }
       applyConfig();
       saveConfig();
       
-      // Незаметный импульс микро-точки для подтверждения
-      micDot.classList.add('pulse');
-      setTimeout(() => micDot.classList.remove('pulse'), 250);
+      // Незаметная вспышка точки в подтверждение
+      micDot.classList.add('hearing');
+      setTimeout(() => micDot.classList.remove('hearing'), 200);
     }
 
-    // Клик по кнопкам позиции в меню настроек
     posButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         config.position = btn.dataset.pos;
@@ -954,15 +1030,13 @@
         const deltaY = e.changedTouches[0].clientY - touchStartY;
         const deltaTime = Date.now() - touchStartTime;
 
-        // Если это горизонтальный свайп: смещение > 35px, время < 400мс
-        if (deltaTime < 450 && Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+        // Если это горизонтальный свайп: смещение > 40px, время < 450мс
+        if (deltaTime < 450 && Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
           isSwipeDetected = true;
           if (deltaX > 0) {
-            // Свайп ВПРАВО -> переносим текст НАПРАВО!
-            switchSide('right');
+            switchSide('right'); // Свайп вправо
           } else {
-            // Свайп ВЛЕВО -> переносим текст НАЛЕВО!
-            switchSide('left');
+            switchSide('left');  // Свайп влево
           }
           return;
         }
@@ -970,7 +1044,6 @@
     });
 
     container.addEventListener('click', (e) => {
-      // Если это был свайп - не считаем как клик
       if (isSwipeDetected) {
         isSwipeDetected = false;
         return;
@@ -986,7 +1059,7 @@
 
       tapTimer = setTimeout(() => {
         if (tapCount === 1) {
-          // 1 ТАП: Паника! Мгновенно чернеет экран (0%)
+          // 1 ТАП: Паника (мгновенно чернеет экран)
           toggleStealthBlackout();
         } else if (tapCount === 2) {
           // 2 ТАПА: Режим Always-On Display (часы)
@@ -1003,6 +1076,10 @@
       fakeScreen.style.display = 'none';
       isFakeClock = false;
       wordDisplay.style.opacity = '1';
+    });
+
+    errorBanner.addEventListener('click', () => {
+      errorBanner.style.display = 'none';
     });
 
     function toggleStealthBlackout() {
@@ -1052,7 +1129,7 @@
       const newLang = document.getElementById('setting-lang').value;
       if (newLang !== config.lang) {
         config.lang = newLang;
-        safeRestartSpeech();
+        scheduleRestart(100);
       }
 
       applyConfig();
@@ -1063,11 +1140,13 @@
     document.getElementById('test-word-btn').addEventListener('click', () => {
       const sample = VOCABULARY[Math.floor(Math.random() * VOCABULARY.length)];
       onWordDetected(sample);
-      settingsModal.style.display = 'none';
+      if (diagLastMatch) {
+        diagLastMatch.textContent = `${sample.term} (${sample.trans})`;
+      }
     });
 
     // ==============================================================
-    // ОТОБРАЖЕНИЕ АНГЛИЙСКОГО ОТВЕТА (БЕЗ АВТОИСЧЕЗАНИЯ!)
+    // ОТОБРАЖЕНИЕ АНГЛИЙСКОГО ОТВЕТА (БЕЗ ИСЧЕЗАНИЯ!)
     // ==============================================================
     function onWordDetected(item) {
       if (isHidden) return;
@@ -1082,10 +1161,13 @@
         renderHistory();
       }
 
-      // ТЕКСТ ТЕПЕРЬ НЕ ИСЧЕЗАЕТ ЧЕРЕЗ 15 СЕКУНД!
       const colors = BRIGHTNESS_MAP[config.brightness] || BRIGHTNESS_MAP['dim'];
       currentTermEl.style.color = colors.main;
       currentTransEl.style.color = colors.trans;
+
+      if (diagLastMatch) {
+        diagLastMatch.textContent = `${item.term} (${item.trans})`;
+      }
     }
 
     function renderHistory() {
@@ -1107,208 +1189,310 @@
     }
 
     // ==============================================================
-    // УСИЛЕННЫЙ ДВИЖОК РАСПОЗНАВАНИЯ РЕЧИ (WEB SPEECH + WATCHDOG)
+    // СТАБИЛЬНЫЙ ДВИЖОК РАСПОЗНАВАНИЯ РЕЧИ (WEB SPEECH API)
+    // Без getUserMedia конфликтов!
     // ==============================================================
     let recognition = null;
-    let isListening = false;
+    let isRecognizing = false;
+    let isStarting = false;
     let shouldBeListening = false;
-    let lastAudioTimestamp = Date.now();
-
-    // Скользящий буфер распознанной речи (хранит последние 25 слов)
-    let rollingSpeechTokens = [];
+    let restartTimer = null;
+    let watchdogTimer = null;
+    let consecutiveErrors = 0;
+    let rollingTokens = [];
+    let lastMatchedTerm = '';
+    let lastMatchTime = 0;
 
     function normalizeText(text) {
       if (!text) return '';
       return text.toLowerCase()
                  .replace(/ё/g, 'е')
-                 .replace(/[^a-zA-Zа-яА-Я0-9\s\-]/g, ' ')
+                 .replace(/[^a-zA-Zа-яА-Я0-9\s]/g, ' ')
                  .replace(/\s+/g, ' ')
                  .trim();
     }
 
-    function initSpeechEngine() {
+    function setMicIndicator(state, message = '') {
+      micDot.className = state;
+      if (diagMicStatus) {
+        if (state === 'listening') {
+          diagMicStatus.textContent = '🟢 Слушает (готов)';
+          diagMicStatus.style.color = '#72e48e';
+        } else if (state === 'hearing') {
+          diagMicStatus.textContent = '🟢 Слышит речь...';
+          diagMicStatus.style.color = '#a6ffbc';
+        } else if (state === 'reconnecting') {
+          diagMicStatus.textContent = '🟡 Переподключение...';
+          diagMicStatus.style.color = '#ffd166';
+        } else if (state === 'error') {
+          diagMicStatus.textContent = '🔴 Ошибка: ' + (message || 'сбой');
+          diagMicStatus.style.color = '#ff6b6b';
+        } else {
+          diagMicStatus.textContent = '⚪ Ожидание';
+          diagMicStatus.style.color = '#888';
+        }
+      }
+    }
+
+    function showStatusError(msg) {
+      errorBanner.textContent = '⚠️ ' + msg + ' (нажмите, чтобы скрыть)';
+      errorBanner.style.display = 'block';
+    }
+
+    function clearStatusError() {
+      errorBanner.style.display = 'none';
+    }
+
+    function createAndStartRecognizer() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert("Браузер не поддерживает SpeechRecognition. Используйте Google Chrome на Android.");
+        showStatusError("Speech Recognition не поддерживается. Откройте в Google Chrome на Android.");
+        setMicIndicator('error', 'Нет поддержки SpeechRecognition');
         return;
       }
 
+      if (isRecognizing || isStarting) return;
+
       if (recognition) {
         try {
+          recognition.onstart = null;
+          recognition.onaudiostart = null;
+          recognition.onspeechstart = null;
+          recognition.onspeechend = null;
           recognition.onend = null;
           recognition.onerror = null;
+          recognition.onresult = null;
           recognition.abort();
         } catch(e) {}
+        recognition = null;
       }
 
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = config.lang;
-      recognition.maxAlternatives = 4; // Проверяем до 4 вариантов от Google!
+      try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = config.lang || 'ru-RU';
+        recognition.maxAlternatives = 1;
 
-      recognition.onstart = () => {
-        isListening = true;
-        lastAudioTimestamp = Date.now();
-        micDot.className = 'listening';
-        requestWakeLock();
-      };
+        recognition.onstart = () => {
+          isStarting = false;
+          isRecognizing = true;
+          consecutiveErrors = 0;
+          setMicIndicator('listening');
+          clearStatusError();
+          requestWakeLock();
+        };
 
-      recognition.onaudiostart = () => {
-        lastAudioTimestamp = Date.now();
-        micDot.classList.add('pulse');
-        setTimeout(() => micDot.classList.remove('pulse'), 300);
-      };
+        recognition.onaudiostart = () => {
+          setMicIndicator('listening');
+        };
 
-      recognition.onspeechstart = () => {
-        lastAudioTimestamp = Date.now();
-      };
+        recognition.onspeechstart = () => {
+          setMicIndicator('hearing');
+        };
 
-      recognition.onend = () => {
-        isListening = false;
-        micDot.className = '';
-        if (shouldBeListening) {
-          // Немедленный безопасный перезапуск
-          setTimeout(safeRestartSpeech, 150);
-        }
-      };
+        recognition.onspeechend = () => {
+          setMicIndicator('listening');
+        };
 
-      recognition.onerror = (event) => {
-        lastAudioTimestamp = Date.now();
-        if (event.error === 'not-allowed') {
-          micDot.className = 'error';
-          alert("Микрофон заблокирован. Разрешите микрофон в настройках браузера!");
-        } else if (event.error === 'no-speech') {
-          // В комнате просто тишина - это нормально, не показываем ошибку
-          if (shouldBeListening && !isListening) {
-            safeRestartSpeech();
-          }
-        } else {
-          micDot.className = 'error';
-          setTimeout(safeRestartSpeech, 400);
-        }
-      };
+        recognition.onresult = (event) => {
+          setMicIndicator('hearing');
+          setTimeout(() => {
+            if (isRecognizing) setMicIndicator('listening');
+          }, 350);
 
-      recognition.onresult = (event) => {
-        lastAudioTimestamp = Date.now();
-        micDot.classList.add('pulse');
-        setTimeout(() => micDot.classList.remove('pulse'), 200);
+          let interimText = '';
+          let finalText = '';
 
-        let latestText = '';
-
-        // Проверяем ВСЕ альтернативы от Google
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const res = event.results[i];
-          for (let k = 0; k < res.length; ++k) {
-            const altText = res[k].transcript;
-            if (altText) {
-              if (k === 0) latestText += ' ' + altText;
-              processTranscriptCandidate(altText);
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const res = event.results[i];
+            const candidate = res[0] ? res[0].transcript : '';
+            if (res.isFinal) {
+              finalText += candidate + ' ';
+            } else {
+              interimText += candidate + ' ';
             }
           }
-        }
 
-        if (latestText.trim()) {
-          updateRollingBuffer(latestText);
-          if (config.showMonitor) {
-            heardMonitor.textContent = latestText.trim();
+          const combined = (finalText + ' ' + interimText).trim();
+          if (combined) {
+            handleIncomingSpeech(combined);
           }
-        }
-      };
-    }
+        };
 
-    function safeRestartSpeech() {
-      if (!shouldBeListening) return;
-      try {
-        if (!recognition) {
-          initSpeechEngine();
-        }
+        recognition.onerror = (event) => {
+          const err = event.error;
+          console.warn("Speech recognition error:", err);
+          isStarting = false;
+
+          if (err === 'no-speech') {
+            // Тишина в аудитории — абсолютно штатная ситуация
+            return;
+          }
+
+          consecutiveErrors++;
+
+          if (err === 'not-allowed') {
+            shouldBeListening = false;
+            isRecognizing = false;
+            setMicIndicator('error', 'микрофон заблокирован');
+            showStatusError("Микрофон заблокирован! Нажмите значок замочка в строке адреса и разрешите микрофон.");
+            return;
+          }
+
+          if (err === 'network') {
+            setMicIndicator('error', 'нет сети');
+            showStatusError("Ошибка сети (Google Speech)! Проверьте интернет или скачайте оффлайн-пакет в настройках Google.");
+            scheduleRestart(2500);
+            return;
+          }
+
+          if (err === 'audio-capture') {
+            setMicIndicator('error', 'микрофон занят');
+            showStatusError("Микрофон занят другим приложением!");
+            scheduleRestart(2000);
+            return;
+          }
+
+          setMicIndicator('reconnecting', err);
+          const backoff = Math.min(600 * Math.pow(1.4, consecutiveErrors), 6000);
+          scheduleRestart(backoff);
+        };
+
+        recognition.onend = () => {
+          isRecognizing = false;
+          isStarting = false;
+          setMicIndicator('reconnecting');
+          if (shouldBeListening) {
+            scheduleRestart(200);
+          }
+        };
+
+        isStarting = true;
         recognition.start();
-      } catch (e) {
-        // Если объект залип в переходном состоянии - пересоздаем его начисто
-        try {
-          initSpeechEngine();
-          recognition.start();
-        } catch(err) {}
+      } catch(err) {
+        console.error("Failed to start speech recognition:", err);
+        isStarting = false;
+        isRecognizing = false;
+        setMicIndicator('error', err.message);
+        scheduleRestart(1200);
       }
     }
 
-    // Сторожевой таймер (Watchdog) - проверяет каждые 1.5 секунды, что микрофон реально жив
-    setInterval(() => {
-      if (shouldBeListening) {
-        const timeSinceAudio = Date.now() - lastAudioTimestamp;
-        if (!isListening || timeSinceAudio > 8000) {
-          safeRestartSpeech();
-          lastAudioTimestamp = Date.now();
+    function scheduleRestart(delay = 200) {
+      if (!shouldBeListening) return;
+      clearTimeout(restartTimer);
+      restartTimer = setTimeout(() => {
+        if (shouldBeListening && !isRecognizing && !isStarting) {
+          createAndStartRecognizer();
         }
-      }
-    }, 1500);
-
-    // ==============================================================
-    // СКОЛЬЗЯЩИЙ БУФЕР И ПРИОРИТЕТНОЕ СОПОСТАВЛЕНИЕ
-    // ==============================================================
-    function updateRollingBuffer(newChunk) {
-      const words = normalizeText(newChunk).split(/\s+/).filter(w => w.length > 0);
-      rollingSpeechTokens.push(...words);
-      if (rollingSpeechTokens.length > 35) {
-        rollingSpeechTokens = rollingSpeechTokens.slice(-35);
-      }
-      // Проверяем также объединенный текст последних секунд
-      const fullRollingText = rollingSpeechTokens.join(' ');
-      checkAgainstVocabulary(fullRollingText);
+      }, delay);
     }
 
-    function processTranscriptCandidate(rawText) {
-      const clean = normalizeText(rawText);
-      checkAgainstVocabulary(clean);
+    // Сторожевой таймер: раз в 3.5 секунды проверяет активность
+    function startWatchdog() {
+      clearInterval(watchdogTimer);
+      watchdogTimer = setInterval(() => {
+        if (shouldBeListening && !isRecognizing && !isStarting) {
+          scheduleRestart(100);
+        }
+      }, 3500);
     }
 
-    let lastMatchedTerm = '';
-    let lastMatchTime = 0;
+    // ==============================================================
+    // ОБРАБОТКА РЕЧИ И ПОИСК СЛОВ В СЛОВАРЕ
+    // ==============================================================
+    function handleIncomingSpeech(speech) {
+      const clean = normalizeText(speech);
+      if (!clean || clean.length < 2) return;
 
-    function checkAgainstVocabulary(speechText) {
-      if (!speechText || speechText.length < 2) return;
+      // Отображение в мониторе на черном экране
+      if (config.showMonitor) {
+        heardMonitor.textContent = '● ' + speech;
+      }
+      if (diagLiveSpeech) {
+        diagLiveSpeech.textContent = speech;
+      }
 
+      // 1. Проверяем текущую услышанную фразу целиком
+      const immediateMatch = searchInVocabulary(clean);
+      if (immediateMatch) {
+        triggerMatch(immediateMatch);
+        return;
+      }
+
+      // 2. Добавляем в скользящий буфер (последние 30 слов) на случай длинных пауз
+      const words = clean.split(' ').filter(Boolean);
+      rollingTokens.push(...words);
+      if (rollingTokens.length > 30) {
+        rollingTokens = rollingTokens.slice(-30);
+      }
+      const fullBuffer = rollingTokens.join(' ');
+      const bufferMatch = searchInVocabulary(fullBuffer);
+      if (bufferMatch) {
+        triggerMatch(bufferMatch);
+      }
+    }
+
+    function searchInVocabulary(text) {
       for (const item of VOCABULARY) {
-        // 1. Проверяем русские корни
+        // Русские правила
         if (item.ruRules && item.ruRules.length > 0) {
           for (const rule of item.ruRules) {
-            // rule - массив корней, все корни должны присутствовать в речи
-            const allFound = rule.every(stem => speechText.includes(normalizeText(stem)));
-            if (allFound) {
-              triggerMatch(item);
-              return;
+            if (Array.isArray(rule)) {
+              const allStemsPresent = rule.every(stem => text.includes(normalizeText(stem)));
+              if (allStemsPresent) return item;
+            } else if (typeof rule === 'string') {
+              if (text.includes(normalizeText(rule))) return item;
             }
           }
         }
 
-        // 2. Проверяем английские фразы
+        // Английские правила (если учительница назвала английское слово)
         if (item.enRules && item.enRules.length > 0) {
           for (const enPhrase of item.enRules) {
-            const regex = new RegExp('\\b' + enPhrase.toLowerCase().replace('-', '[\\s\\-]') + '\\b', 'i');
-            if (regex.test(speechText)) {
-              triggerMatch(item);
-              return;
-            }
+            const enClean = normalizeText(enPhrase);
+            if (text.includes(enClean)) return item;
           }
         }
       }
+      return null;
     }
 
     function triggerMatch(item) {
       const now = Date.now();
-      if (item.term !== lastMatchedTerm || now - lastMatchTime > 3500) {
+      if (item.term !== lastMatchedTerm || (now - lastMatchTime > 3000)) {
         lastMatchedTerm = item.term;
         lastMatchTime = now;
         onWordDetected(item);
-        // Слегка подчищаем буфер, чтобы не сработало дважды подряд
-        rollingSpeechTokens = [];
+        rollingTokens = []; // Очищаем буфер после успешного попадания
       }
     }
 
     // ==============================================================
-    // АКТИВАЦИЯ И ПОЛНЫЙ ЭКРАН
+    // ПРОВЕРКА ОКРУЖЕНИЯ (HTTPS, БРАУЗЕР) И СТАРТ
     // ==============================================================
+    function checkEnvironment() {
+      const isHttps = window.location.protocol === 'https:';
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isHttp = window.location.protocol === 'http:';
+
+      if (isHttp && !isLocal) {
+        document.getElementById('http-warning').style.display = 'block';
+      }
+
+      const ua = navigator.userAgent || '';
+      const isInApp = /Telegram|VK|Instagram|FB|Line|MicroMessenger/i.test(ua);
+      if (isInApp) {
+        document.getElementById('inapp-warning').style.display = 'block';
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        document.getElementById('nospeech-warning').style.display = 'block';
+      }
+    }
+
     function enterFullscreen() {
       const el = document.documentElement;
       if (el.requestFullscreen) {
@@ -1322,20 +1506,13 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
-    startBtn.addEventListener('click', async () => {
+    startBtn.addEventListener('click', () => {
       startOverlay.style.display = 'none';
       shouldBeListening = true;
       enterFullscreen();
 
-      // Разогреваем аудио поток через getUserMedia (держит микрофон активным)
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          await navigator.mediaDevices.getUserMedia({ audio: true });
-        }
-      } catch(e) {}
-
-      initSpeechEngine();
-      safeRestartSpeech();
+      createAndStartRecognizer();
+      startWatchdog();
       applyConfig();
       requestWakeLock();
     });
@@ -1343,11 +1520,12 @@
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && shouldBeListening) {
         requestWakeLock();
-        safeRestartSpeech();
+        scheduleRestart(100);
       }
     });
 
-    // Инициализация при загрузке
+    // Инициализация при открытии страницы
+    checkEnvironment();
     applyConfig();
 
   </script>
