@@ -35,28 +35,38 @@
       background: #000000;
       display: flex;
       flex-direction: column;
-      padding: 16px;
+      padding: 16px 20px;
       cursor: pointer;
+      transition: justify-content 0.2s, align-items 0.2s;
     }
 
-    .pos-bottom-right { justify-content: flex-end; align-items: flex-end; text-align: right; }
-    .pos-bottom-left  { justify-content: flex-end; align-items: flex-start; text-align: left; }
-    .pos-top-right    { justify-content: flex-start; align-items: flex-end; text-align: right; }
-    .pos-top-left     { justify-content: flex-start; align-items: flex-start; text-align: left; }
-    .pos-center       { justify-content: center; align-items: center; text-align: center; }
+    /* Позиционирование вывода подсказок */
+    .pos-bottom-right { justify-content: flex-end; align-items: flex-end; }
+    .pos-bottom-right #word-display { text-align: right; align-items: flex-end; }
+
+    .pos-bottom-left  { justify-content: flex-end; align-items: flex-start; }
+    .pos-bottom-left #word-display { text-align: left; align-items: flex-start; }
+
+    .pos-top-right    { justify-content: flex-start; align-items: flex-end; }
+    .pos-top-right #word-display { text-align: right; align-items: flex-end; }
+
+    .pos-top-left     { justify-content: flex-start; align-items: flex-start; }
+    .pos-top-left #word-display { text-align: left; align-items: flex-start; }
 
     #word-display {
-      max-width: 92vw;
-      transition: opacity 0.3s ease;
+      max-width: 88vw;
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.25s ease;
       pointer-events: none;
     }
 
-    /* Главное английское слово (ОТВЕТ) */
+    /* Главное английское слово (ОТВЕТ) - НЕ ИСЧЕЗАЕТ САМО! */
     .current-word {
       display: block;
       font-size: 14px;
       font-weight: 600;
-      color: #3c3c3c;
+      color: #3a3a3a;
       line-height: 1.3;
       letter-spacing: 0.2px;
       transition: color 0.3s;
@@ -65,7 +75,7 @@
     /* Русский перевод */
     .word-trans {
       font-size: 10px;
-      color: #262626;
+      color: #242424;
       display: block;
       margin-top: 2px;
       font-weight: 400;
@@ -73,12 +83,12 @@
 
     .word-lesson {
       font-size: 8px;
-      color: #1c1c1c;
+      color: #1a1a1a;
       margin-left: 4px;
       font-weight: normal;
     }
 
-    /* История */
+    /* История последних ответов */
     .history-list {
       margin-top: 8px;
       display: flex;
@@ -87,14 +97,31 @@
     }
     .history-item {
       font-size: 9px;
-      color: #1e1e1e;
+      color: #1c1c1c;
       line-height: 1.25;
     }
     .history-item span.trans {
-      color: #161616;
+      color: #141414;
     }
 
-    /* Индикатор микрофона */
+    /* Монитор услышанной речи (ультра-стелс для контроля микрофона) */
+    #heard-monitor {
+      position: absolute;
+      font-size: 8px;
+      color: #151515;
+      max-width: 75vw;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .mon-top-left { top: 10px; left: 16px; text-align: left; }
+    .mon-top-right { top: 10px; right: 16px; text-align: right; }
+    .mon-bottom-left { bottom: 10px; left: 16px; text-align: left; }
+    .mon-bottom-right { bottom: 10px; right: 16px; text-align: right; }
+
+    /* Крошечный индикатор активности микрофона (1 пиксель) */
     #mic-dot {
       position: absolute;
       top: 6px;
@@ -102,17 +129,20 @@
       width: 3px;
       height: 3px;
       border-radius: 50%;
-      background: #141414;
-      transition: background 0.3s;
+      background: #111111;
+      transition: background 0.2s;
     }
     #mic-dot.listening {
-      background: #203520;
+      background: #1d2c1d;
+    }
+    #mic-dot.pulse {
+      background: #2b452b; /* Подмигивает при приеме речи */
     }
     #mic-dot.error {
-      background: #351a1a;
+      background: #3a1818;
     }
 
-    /* Фейковые часы (маскировка) */
+    /* Фейковые часы (маскировка под заблокированный экран Always-On Display) */
     #fake-screen {
       position: absolute;
       inset: 0;
@@ -122,17 +152,17 @@
       justify-content: flex-start;
       align-items: center;
       padding-top: 50px;
-      color: #181818;
+      color: #161616;
       letter-spacing: 1px;
     }
     #fake-screen .fake-time {
       font-size: 34px;
-      color: #202020;
+      color: #1c1c1c;
       font-weight: 200;
     }
     #fake-screen .fake-date {
       font-size: 10px;
-      color: #1a1a1a;
+      color: #161616;
       margin-top: 5px;
     }
 
@@ -140,19 +170,20 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       z-index: 10;
       opacity: 0;
     }
 
+    /* Модальное окно настроек */
     #settings-modal {
       position: absolute;
       inset: 0;
-      background: rgba(8, 8, 8, 0.96);
+      background: rgba(6, 6, 6, 0.97);
       display: none;
       flex-direction: column;
-      padding: 24px 20px;
+      padding: 22px 18px;
       color: #aaa;
       font-size: 13px;
       overflow-y: auto;
@@ -179,15 +210,38 @@
     }
     select {
       width: 100%;
-      background: #181818;
+      background: #161616;
       color: #ccc;
       border: 1px solid #333;
-      padding: 8px;
+      padding: 8px 10px;
       border-radius: 6px;
       font-size: 13px;
     }
+    
+    .pos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .pos-btn-opt {
+      background: #181818;
+      border: 1px solid #333;
+      color: #999;
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .pos-btn-opt.active {
+      background: #1d3623;
+      border-color: #3b6e47;
+      color: #72e48e;
+      font-weight: 500;
+    }
+
     .btn {
-      background: #252525;
+      background: #222222;
       color: #eee;
       border: 1px solid #444;
       padding: 10px 14px;
@@ -199,9 +253,9 @@
       width: 100%;
     }
     .btn-primary {
-      background: #1f3b25;
-      border-color: #2e5c38;
-      color: #aef0ba;
+      background: #1c3821;
+      border-color: #2b5734;
+      color: #9ff0b0;
     }
 
     #start-overlay {
@@ -226,21 +280,21 @@
       display: inline-block;
       font-size: 11px;
       color: #68cf80;
-      background: #132517;
+      background: #122416;
       padding: 3px 8px;
       border-radius: 4px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     #start-overlay p {
       font-size: 12px;
       color: #666;
       line-height: 1.5;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
     #start-btn {
-      background: #17331b;
+      background: #153119;
       color: #72e48e;
-      border: 1px solid #2b6134;
+      border: 1px solid #285931;
       padding: 13px 26px;
       border-radius: 8px;
       font-size: 14px;
@@ -251,23 +305,28 @@
 </head>
 <body>
 
+  <!-- Стартовый экран запроса микрофона -->
   <div id="start-overlay">
     <h1>BSUIR Stealth Prompter</h1>
-    <div class="badge">Слушает русскую речь ➔ Выдаёт ответ на английском</div>
+    <div class="badge">Улучшенное распознавание • Модуль 3 (Уроки 1, 3, 4)</div>
     <p>
-      Специально настроено под словарь БГУИР Модуля 3 (Уроки 1, 3, 4).<br>
-      Буквы тёмно-серые, при клике автоматически включает полный экран.<br><br>
-      <b>Стелс-управление:</b><br>
+      Слушает русскую речь преподавателя и выдаёт английский ответ.<br>
+      <b>Текст больше не исчезает через 15 секунд</b> — висит пока не сменится.<br><br>
+      <b>Стелс-жесты на черном экране:</b><br>
+      • <b>Свайп ВЛЕВО 👈 :</b> Мгновенно переносит текст <b>НАЛЕВО</b><br>
+      • <b>Свайп ВПРАВО 👉 :</b> Мгновенно переносит текст <b>НАПРАВО</b><br>
       • <b>1 тап:</b> Паника (мгновенно чернеет экран в 0%)<br>
-      • <b>2 тапа:</b> Фейковые часы (Always-On Display)<br>
-      • <b>3 тапа:</b> Меню настроек яркости и размера
+      • <b>2 тапа:</b> Фейковые часы Always-On Display<br>
+      • <b>3 тапа:</b> Меню настроек
     </p>
     <button id="start-btn">ВКЛЮЧИТЬ МИКРОФОН И СКРЫТЬСЯ</button>
   </div>
 
+  <!-- Главный стелс-контейнер -->
   <div id="stealth-container" class="pos-bottom-right">
     <div id="hidden-trigger" title="Настройки"></div>
     <div id="mic-dot"></div>
+    <div id="heard-monitor" class="mon-top-left" style="display:none;"></div>
 
     <div id="word-display">
       <div id="current-box">
@@ -278,55 +337,62 @@
     </div>
   </div>
 
+  <!-- Фейковый экран часов Always-On Display -->
   <div id="fake-screen">
     <div class="fake-time" id="clock-time">12:00</div>
     <div class="fake-date" id="clock-date">Понедельник, 15 мая</div>
   </div>
 
+  <!-- Меню настроек -->
   <div id="settings-modal">
     <h2>
       <span>Настройки суфлёра</span>
       <span style="cursor:pointer;" id="close-settings">✕</span>
     </h2>
 
+    <!-- ВЫБОР РАСПОЛОЖЕНИЯ: СЛЕВА ИЛИ СПРАВА -->
     <div class="setting-row">
-      <label class="setting-label">Размер английского слова (ответа)</label>
+      <label class="setting-label">Расположение подсказки (Слева / Справа)</label>
+      <div class="pos-grid">
+        <div class="pos-btn-opt" data-pos="pos-bottom-left">Слева внизу ↙</div>
+        <div class="pos-btn-opt active" data-pos="pos-bottom-right">Справа внизу ↘</div>
+        <div class="pos-btn-opt" data-pos="pos-top-left">Слева вверху ↖</div>
+        <div class="pos-btn-opt" data-pos="pos-top-right">Справа вверху ↗</div>
+      </div>
+      <div style="font-size:10px; color:#555; margin-top:4px;">
+        💡 Можно менять на лету свайпом влево или вправо прямо по экрану!
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <label class="setting-label">Размер шрифта ответа</label>
       <select id="setting-fontsize">
-        <option value="11">Микро (11px — максимальный стелс)</option>
+        <option value="12">Микро (12px — максимум стелса)</option>
         <option value="14" selected>Обычный стелс (14px)</option>
-        <option value="18">Средний (18px)</option>
-        <option value="22">Крупный (22px)</option>
+        <option value="17">Средний (17px)</option>
+        <option value="21">Крупный (21px)</option>
       </select>
     </div>
 
     <div class="setting-row">
       <label class="setting-label">Яркость серых букв на чёрном фоне</label>
       <select id="setting-brightness">
-        <option value="ultra-dim">Едва видно (глубокий темно-серый #272727)</option>
-        <option value="dim" selected>Стелс темно-серый (#3a3a3a — по умолчанию)</option>
-        <option value="medium">Умеренный серый (#525252)</option>
-        <option value="light">Светло-серый (#757575)</option>
+        <option value="ultra-dim">Едва видно (глубокий тёмно-серый #272727)</option>
+        <option value="dim" selected>Стелс тёмно-серый (#3a3a3a — по умолчанию)</option>
+        <option value="medium">Умеренный серый (#555555)</option>
+        <option value="light">Светло-серый (#787878)</option>
       </select>
     </div>
 
     <div class="setting-row">
-      <label class="setting-label">Позиция ответа на экране</label>
-      <select id="setting-position">
-        <option value="pos-bottom-right" selected>Правый нижний угол</option>
-        <option value="pos-bottom-left">Левый нижний угол</option>
-        <option value="pos-top-right">Правый верхний угол</option>
-        <option value="pos-top-left">Левый верхний угол</option>
-        <option value="pos-center">По центру</option>
+      <label class="setting-label">Контроль распознавания (что слышит телефон)</label>
+      <select id="setting-monitor">
+        <option value="off" selected>Отключено (максимальный стелс)</option>
+        <option value="on">Включено (показывать микро-текстом 8px)</option>
       </select>
-    </div>
-
-    <div class="setting-row">
-      <label class="setting-label">Язык речи преподавателя</label>
-      <select id="setting-lang">
-        <option value="ru-RU" selected>Русский (учитель говорит по-русски)</option>
-        <option value="en-US">English US (учитель говорит по-английски)</option>
-        <option value="en-GB">English UK</option>
-      </select>
+      <div style="font-size:10px; color:#555; margin-top:3px;">
+        Позволяет видеть в противоположном углу, какие слова сейчас слышит микрофон.
+      </div>
     </div>
 
     <div class="setting-row">
@@ -347,10 +413,19 @@
     </div>
 
     <div class="setting-row">
+      <label class="setting-label">Язык речи преподавателя</label>
+      <select id="setting-lang">
+        <option value="ru-RU" selected>Русский (учитель говорит по-русски)</option>
+        <option value="en-US">English US</option>
+        <option value="en-GB">English UK</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
       <label class="setting-label">Статус словаря:</label>
       <div style="font-size:12px; color:#666; line-height:1.4;">
         ✓ Загружено терминов: <b id="vocab-count-badge" style="color:#72e48e;">...</b><br>
-        ✓ Модуль 3: Уроки 1, 3, 4
+        ✓ Модуль 3: Уроки 1, 3, 4 (BSUIR)
       </div>
     </div>
 
@@ -361,7 +436,7 @@
   <script>
     // ==============================================================
     // БАЗА СЛОВАРЯ БГУИР: МОДУЛЬ 3 (УРОКИ 1, 3, 4)
-    // ОБЯЗАТЕЛЬНЫЕ КОМБИНАЦИИ И ПРИОРИТЕТНЫЙ МАТЧИНГ
+    // УЛЬТРА-ГИБКИЙ МНОГОКОМПОНЕНТНЫЙ МАТЧИНГ
     // ==============================================================
     const VOCABULARY = [
       // ------------------------------------------------------------
@@ -371,13 +446,13 @@
         term: "IT help desk technician", 
         trans: "специалист службы поддержки", 
         lesson: "L3", 
-        // Ловит: "специалист службы поддержки", "техподдержка", "специалист поддержки", "служба поддержки"
         ruRules: [
-          ["специалист", "поддержк"],
-          ["служб", "поддержк"],
+          ["поддержк"],
+          ["поддерж"],
           ["техподдержк"],
           ["хелпдеск"],
-          ["хелп", "деск"]
+          ["хелп", "деск"],
+          ["help", "desk"]
         ],
         enRules: ["help desk technician", "help desk", "helpdesk"]
       },
@@ -385,9 +460,11 @@
         term: "colleague", 
         trans: "Коллеги", 
         lesson: "L3", 
-        // Ловит любые формы: "коллега", "коллеги", "коллегам", "коллег"
         ruRules: [
-          ["коллег"]
+          ["коллег"],
+          ["колег"],
+          ["калег"],
+          ["калек"]
         ],
         enRules: ["colleague", "colleagues"]
       },
@@ -396,9 +473,12 @@
         trans: "Инженер по аппаратному обеспечению", 
         lesson: "L3", 
         ruRules: [
-          ["инженер", "аппаратн"],
+          ["аппаратн", "обеспечен"],
+          ["аппаратн", "инженер"],
+          ["инженер", "аппарат"],
           ["инженер", "желез"],
-          ["аппаратн", "обеспечени"]
+          ["железо", "компьютер"],
+          ["хардвер"]
         ],
         enRules: ["hardware engineer"]
       },
@@ -409,7 +489,9 @@
         ruRules: [
           ["инженер", "программ"],
           ["инженер", "софт"],
-          ["разработчик", "по"]
+          ["программн", "обеспечен"],
+          ["разработчик", "по"],
+          ["софтвер", "инженер"]
         ],
         enRules: ["software engineer"]
       },
@@ -421,7 +503,9 @@
           ["специалист", "безопасн"],
           ["информационн", "безопасн"],
           ["кибербезопасн"],
-          ["безопасник"]
+          ["безопасник"],
+          ["защит", "информац"],
+          ["информационная", "защит"]
         ],
         enRules: ["security specialist", "it security", "cyber security"]
       },
@@ -430,7 +514,9 @@
         trans: "Системный аналитик", 
         lesson: "L3", 
         ruRules: [
-          ["системн", "аналитик"]
+          ["системн", "аналитик"],
+          ["аналитик", "систем"],
+          ["системная", "аналитик"]
         ],
         enRules: ["systems analyst", "system analyst"]
       },
@@ -441,8 +527,10 @@
         ruRules: [
           ["разработчик", "игр"],
           ["создатель", "игр"],
+          ["разработка", "игр"],
           ["видеоигр"],
-          ["геймдев"]
+          ["геймдев"],
+          ["гейм", "дев"]
         ],
         enRules: ["video game developer", "game developer"]
       },
@@ -452,9 +540,12 @@
         lesson: "L1", 
         ruRules: [
           ["отдел", "кадр"],
-          ["кадров", "служб"],
+          ["кадров", "отдел"],
+          ["служба", "кадр"],
+          ["кадры"],
+          ["кадровик"],
           ["эйчар"],
-          ["управление", "персонал"]
+          ["управлен", "персонал"]
         ],
         enRules: ["human resources", "hr department"]
       },
@@ -465,8 +556,10 @@
         ruRules: [
           ["исполнительн", "директор"],
           ["генеральн", "директор"],
+          ["гендиректор"],
           ["сео"],
-          ["сио"]
+          ["сио"],
+          ["ceo"]
         ],
         enRules: ["chief executive officer", "ceo"]
       },
@@ -477,7 +570,9 @@
         ruRules: [
           ["достиг", "цел"],
           ["достич", "цел"],
+          ["достижен", "цел"],
           ["выполн", "цел"],
+          ["поставленн", "цел"],
           ["добива", "цел"]
         ],
         enRules: ["meet goals", "achieve goals"]
@@ -489,8 +584,10 @@
         ruRules: [
           ["лишен"],
           ["лишенн"],
-          ["быть лишенным"],
-          ["быть лишенной"]
+          ["лишена"],
+          ["лишены"],
+          ["лишено"],
+          ["быть лишен"]
         ],
         enRules: ["devoid of", "be devoid"]
       },
@@ -499,9 +596,10 @@
         trans: "Объективный, беспристрастный", 
         lesson: "L1", 
         ruRules: [
-          ["объективн"],
           ["беспристрастн"],
-          ["непредвзят"]
+          ["непредвзят"],
+          ["объективн"],
+          ["объективность"]
         ],
         enRules: ["unbiased"]
       },
@@ -512,7 +610,8 @@
         ruRules: [
           ["ответственн", "работ"],
           ["требовательн", "работ"],
-          ["сложная работа"]
+          ["сложн", "работ"],
+          ["тяжел", "работ"]
         ],
         enRules: ["demanding job"]
       },
@@ -521,7 +620,7 @@
       // ОСТАЛЬНЫЕ СЛОВА МОДУЛЯ 3 (УРОКИ 1, 3, 4)
       // ------------------------------------------------------------
       // Lesson 1: Being a Successful Specialist
-      { term: "abide", trans: "соблюдать (правила), подчиняться", lesson: "L1", ruRules: [["соблюдать"], ["следовать", "правил"], ["подчиняться"]], enRules: ["abide"] },
+      { term: "abide", trans: "соблюдать (правила), подчиняться", lesson: "L1", ruRules: [["соблюдать"], ["следовать", "правил"], ["подчиняться"], ["эбайд"]], enRules: ["abide"] },
       { term: "adaptable", trans: "гибкий, легко приспосабливающийся", lesson: "L1", ruRules: [["адаптивн"], ["приспосаблива"], ["гибкий к"]], enRules: ["adaptable", "adapt"] },
       { term: "administration department", trans: "административный отдел", lesson: "L1", ruRules: [["административн", "отдел"], ["администрация"]], enRules: ["administration department"] },
       { term: "agenda", trans: "повестка дня", lesson: "L1", ruRules: [["повестк", "дня"], ["план", "собрания"]], enRules: ["agenda"] },
@@ -531,13 +630,12 @@
       { term: "commitment", trans: "преданность делу, обязательство", lesson: "L1", ruRules: [["преданност", "делу"], ["приверженност"], ["обязательств"]], enRules: ["commitment"] },
       { term: "conscience", trans: "совесть", lesson: "L1", ruRules: [["совест"]], enRules: ["conscience"] },
       { term: "conviction", trans: "убеждение, твёрдая уверенность", lesson: "L1", ruRules: [["убеждени"], ["твердая", "уверенност"]], enRules: ["conviction"] },
-      // Внимание: для co-worker убран триггер "коллеги", чтобы не путаться с colleague!
       { term: "co-worker", trans: "сослуживец, напарник по работе", lesson: "L1", ruRules: [["сослуживец"], ["напарник", "работ"], ["товарищ", "работ"]], enRules: ["co-worker", "coworker"] },
-      { term: "customer service department", trans: "отдел обслуживания клиентов", lesson: "L1", ruRules: [["обслуживан", "клиент"], ["клиентск", "отдел"]], enRules: ["customer service"] },
+      { term: "customer service department", trans: "отдел обслуживания клиентов", lesson: "L1", ruRules: [["обслуживан", "клиент"], ["клиентск", "отдел"], ["клиентск", "служб"]], enRules: ["customer service"] },
       { term: "decisive", trans: "решительный", lesson: "L1", ruRules: [["решительн"]], enRules: ["decisive"] },
       { term: "dedicated", trans: "преданный делу, целеустремлённый", lesson: "L1", ruRules: [["преданн", "делу"], ["целеустремленн"], ["посвятивш"]], enRules: ["dedicated"] },
       { term: "define", trans: "определять, давать определение", lesson: "L1", ruRules: [["определять"], ["определить"], ["дать", "определение"]], enRules: ["define"] },
-      { term: "employee", trans: "сотрудник, работник, служащий", lesson: "L1", ruRules: [["сотрудник"], ["работник"], ["служащ"]], enRules: ["employee"] },
+      { term: "employee", trans: "сотрудник, работник, служащий", lesson: "L1", ruRules: [["сотрудник"], ["работник"], ["служащ"], ["наемн"]], enRules: ["employee"] },
       { term: "encourage", trans: "поощрять, воодушевлять", lesson: "L1", ruRules: [["поощрять"], ["воодушевлять"], ["подбадривать"]], enRules: ["encourage"] },
       { term: "nurture", trans: "воспитывать, взращивать, развивать", lesson: "L1", ruRules: [["взращивать"], ["воспитывать"], ["вскармливать"]], enRules: ["nurture"] },
       { term: "open-mindedness", trans: "непредубеждённость, широта взглядов", lesson: "L1", ruRules: [["непредубежденност"], ["открытость", "нов"], ["широта", "взгляд"]], enRules: ["open-mindedness"] },
@@ -551,17 +649,17 @@
       { term: "property", trans: "свойство, качество, собственность", lesson: "L1", ruRules: [["свойств"], ["характеристик"], ["собственност"]], enRules: ["property"] },
       { term: "reasonable", trans: "разумный, обоснованный", lesson: "L1", ruRules: [["разумн"], ["обоснованн"], ["благоразумн"]], enRules: ["reasonable"] },
       { term: "responsibility", trans: "ответственность, обязанность", lesson: "L1", ruRules: [["ответственност"], ["обязанност"]], enRules: ["responsibility"] },
-      { term: "rigid", trans: "жёсткий, негибкий, строгий", lesson: "L1", ruRules: [["жестк"], ["негибк"], ["строг"]], enRules: ["rigid"] },
+      { term: "rigid", trans: "жёсткий, негибкий, строгий", lesson: "L1", ruRules: [["жестк"], ["негибк"], ["строг"], ["ригидн"]], enRules: ["rigid"] },
       { term: "satisfaction", trans: "удовлетворение", lesson: "L1", ruRules: [["удовлетворен"]], enRules: ["satisfaction"] },
       { term: "self-aware", trans: "понимающий себя, самосознательный", lesson: "L1", ruRules: [["самосознани"], ["понимающий", "себя"]], enRules: ["self-aware"] },
       { term: "self-esteem", trans: "самооценка, самоуважение", lesson: "L1", ruRules: [["самооценк"], ["самоуважени"]], enRules: ["self-esteem"] },
       { term: "self-motivated", trans: "самомотивированный, инициативный", lesson: "L1", ruRules: [["самомотивирован"], ["внутренняя", "мотивация"]], enRules: ["self-motivated"] },
-      { term: "experienced", trans: "опытный", lesson: "L1", ruRules: [["опытн"]], enRules: ["experienced"] },
+      { term: "experienced", trans: "опытный", lesson: "L1", ruRules: [["опытн"], ["со стажем"]], enRules: ["experienced"] },
       { term: "finance department", trans: "финансовый отдел, бухгалтерия", lesson: "L1", ruRules: [["финансов", "отдел"], ["бухгалтери"]], enRules: ["finance department"] },
       { term: "get on with", trans: "ладить с кем-либо", lesson: "L1", ruRules: [["ладить", "с"], ["уживаться", "с"]], enRules: ["get on with"] },
       { term: "get rid of", trans: "избавляться от", lesson: "L1", ruRules: [["избавляться", "от"], ["избавиться", "от"]], enRules: ["get rid of"] },
       { term: "hands-off", trans: "невмешивающийся (стиль руководства)", lesson: "L1", ruRules: [["невмешивающ"], ["хэндс офф"]], enRules: ["hands-off"] },
-      { term: "humble", trans: "скромный", lesson: "L1", ruRules: [["скромн"]], enRules: ["humble"] },
+      { term: "humble", trans: "скромный", lesson: "L1", ruRules: [["скромн"], ["незаносчив"]], enRules: ["humble"] },
       { term: "IT department", trans: "IT-отдел", lesson: "L1", ruRules: [["ит", "отдел"], ["ай ти", "отдел"]], enRules: ["it department"] },
       { term: "leadership", trans: "лидерство, руководство", lesson: "L1", ruRules: [["лидерств"], ["руководств"]], enRules: ["leadership"] },
       { term: "marketing department", trans: "отдел маркетинга", lesson: "L1", ruRules: [["отдел", "маркетинг"]], enRules: ["marketing department"] },
@@ -572,7 +670,7 @@
       { term: "top-down leader", trans: "авторитарный лидер (сверху вниз)", lesson: "L1", ruRules: [["авторитарн", "лидер"], ["сверху", "вниз"]], enRules: ["top-down leader"] },
       { term: "trait", trans: "черта характера, особенность", lesson: "L1", ruRules: [["черта", "характер"], ["черта"]], enRules: ["trait"] },
       { term: "trustworthy", trans: "надёжный, заслуживающий доверия", lesson: "L1", ruRules: [["надежн"], ["заслуживающий", "довери"]], enRules: ["trustworthy"] },
-      { term: "willingness", trans: "готовность, желание", lesson: "L1", ruRules: [["готовност"]], enRules: ["willingness"] },
+      { term: "willingness", trans: "готовность, желание", lesson: "L1", ruRules: [["готовност"], ["желание", "работать"]], enRules: ["willingness"] },
 
       // Lesson 3: My Speciality: IT Professional
       { term: "absent-minded", trans: "рассеянный", lesson: "L3", ruRules: [["рассеянн"], ["забывчив"]], enRules: ["absent-minded"] },
@@ -641,7 +739,7 @@
       { term: "concentration", trans: "концентрация, сосредоточенность", lesson: "L4", ruRules: [["концентраци"], ["сосредоточенност"]], enRules: ["concentration"] },
       { term: "concept", trans: "концепция, понятие", lesson: "L4", ruRules: [["концепци"], ["поняти"]], enRules: ["concept"] },
       { term: "conference", trans: "конференция", lesson: "L4", ruRules: [["конференци"]], enRules: ["conference"] },
-      { term: "CPD (Continuing Professional Dev.)", trans: "непрерывное проф. развитие", lesson: "L4", ruRules: [["непрерывн", "развити"], ["профессиональн", "развити"], ["си пи ди"]], enRules: ["continuing professional development", "cpd"] },
+      { term: "Continuing Professional Development (CPD)", trans: "непрерывное проф. развитие", lesson: "L4", ruRules: [["непрерывн", "развити"], ["профессиональн", "развити"], ["си пи ди"]], enRules: ["continuing professional development", "cpd"] },
       { term: "contribution", trans: "вклад, содействие", lesson: "L4", ruRules: [["вклад"], ["содействи"]], enRules: ["contribution"] },
       { term: "employee development", trans: "развитие сотрудников", lesson: "L4", ruRules: [["развитие", "сотрудник"], ["развитие", "персонал"]], enRules: ["employee development"] },
       { term: "job requirement", trans: "требование к должности / работе", lesson: "L4", ruRules: [["требование", "должност"], ["требования", "ваканси"]], enRules: ["job requirement"] },
@@ -697,36 +795,52 @@
     const currentTransEl = document.getElementById('current-trans');
     const historyBoxEl = document.getElementById('history-box');
     const micDot = document.getElementById('mic-dot');
+    const heardMonitor = document.getElementById('heard-monitor');
     const fakeScreen = document.getElementById('fake-screen');
     const clockTime = document.getElementById('clock-time');
     const clockDate = document.getElementById('clock-date');
     const settingsModal = document.getElementById('settings-modal');
     const startOverlay = document.getElementById('start-overlay');
     const startBtn = document.getElementById('start-btn');
+    const posButtons = document.querySelectorAll('.pos-btn-opt');
 
     let isHidden = false;
     let isFakeClock = false;
     let historyWords = [];
     let tapCount = 0;
     let tapTimer = null;
-    let fadeTimeout = null;
     let wakeLock = null;
 
+    // Загрузка настроек из localStorage
     let config = {
       fontSize: 14,
       brightness: 'dim',
       position: 'pos-bottom-right',
       showTrans: true,
       historyCount: 3,
+      showMonitor: false,
       lang: 'ru-RU'
     };
 
+    try {
+      const saved = localStorage.getItem('stealth_prompt_cfg');
+      if (saved) {
+        config = Object.assign(config, JSON.parse(saved));
+      }
+    } catch(e) {}
+
     const BRIGHTNESS_MAP = {
-      'ultra-dim': { main: '#272727', trans: '#1c1c1c', hist: '#141414' },
-      'dim':       { main: '#3a3a3a', trans: '#262626', hist: '#1c1c1c' },
-      'medium':    { main: '#525252', trans: '#363636', hist: '#242424' },
-      'light':     { main: '#757575', trans: '#4c4c4c', hist: '#303030' }
+      'ultra-dim': { main: '#272727', trans: '#1c1c1c', hist: '#141414', mon: '#131313' },
+      'dim':       { main: '#3a3a3a', trans: '#242424', hist: '#1c1c1c', mon: '#161616' },
+      'medium':    { main: '#555555', trans: '#363636', hist: '#242424', mon: '#202020' },
+      'light':     { main: '#787878', trans: '#4c4c4c', hist: '#303030', mon: '#282828' }
     };
+
+    function saveConfig() {
+      try {
+        localStorage.setItem('stealth_prompt_cfg', JSON.stringify(config));
+      } catch(e) {}
+    }
 
     function applyConfig() {
       currentTermEl.style.fontSize = config.fontSize + 'px';
@@ -735,13 +849,62 @@
       const colors = BRIGHTNESS_MAP[config.brightness] || BRIGHTNESS_MAP['dim'];
       currentTermEl.style.color = colors.main;
       currentTransEl.style.color = colors.trans;
+      heardMonitor.style.color = colors.mon;
 
       container.className = '';
       container.classList.add(config.position);
 
+      // Расположение монитора в противоположном углу
+      heardMonitor.className = '';
+      if (config.position.includes('bottom')) {
+        heardMonitor.classList.add(config.position.includes('right') ? 'mon-top-left' : 'mon-top-right');
+      } else {
+        heardMonitor.classList.add(config.position.includes('right') ? 'mon-bottom-left' : 'mon-bottom-right');
+      }
+      heardMonitor.style.display = config.showMonitor ? 'block' : 'none';
+
       currentTransEl.style.display = config.showTrans ? 'block' : 'none';
       renderHistory();
+
+      // Обновить активную кнопку в настройках
+      posButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.pos === config.position);
+      });
     }
+
+    // ==============================================================
+    // БЫСТРАЯ СМЕНА СТОРОНЫ (СЛЕВА / СПРАВА)
+    // ==============================================================
+    function switchSide(targetSide) {
+      const isTop = config.position.includes('top');
+      if (targetSide === 'left') {
+        config.position = isTop ? 'pos-top-left' : 'pos-bottom-left';
+      } else if (targetSide === 'right') {
+        config.position = isTop ? 'pos-top-right' : 'pos-bottom-right';
+      } else {
+        // Toggle side
+        if (config.position.includes('right')) {
+          config.position = isTop ? 'pos-top-left' : 'pos-bottom-left';
+        } else {
+          config.position = isTop ? 'pos-top-right' : 'pos-bottom-right';
+        }
+      }
+      applyConfig();
+      saveConfig();
+      
+      // Незаметный импульс микро-точки для подтверждения
+      micDot.classList.add('pulse');
+      setTimeout(() => micDot.classList.remove('pulse'), 250);
+    }
+
+    // Клик по кнопкам позиции в меню настроек
+    posButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        config.position = btn.dataset.pos;
+        applyConfig();
+        saveConfig();
+      });
+    });
 
     async function requestWakeLock() {
       try {
@@ -765,9 +928,54 @@
     updateClock();
 
     // ==============================================================
-    // ЖЕСТЫ И АНТИПАЛЕВО
+    // СЕНСОРНОЕ УПРАВЛЕНИЕ: СВАЙПЫ ВЛЕВО/ВПРАВО + ТАПЫ
     // ==============================================================
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isSwipeDetected = false;
+
+    container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+        isSwipeDetected = false;
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        enterFullscreen();
+      }
+
+      if (e.changedTouches.length === 1) {
+        const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
+        const deltaTime = Date.now() - touchStartTime;
+
+        // Если это горизонтальный свайп: смещение > 35px, время < 400мс
+        if (deltaTime < 450 && Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+          isSwipeDetected = true;
+          if (deltaX > 0) {
+            // Свайп ВПРАВО -> переносим текст НАПРАВО!
+            switchSide('right');
+          } else {
+            // Свайп ВЛЕВО -> переносим текст НАЛЕВО!
+            switchSide('left');
+          }
+          return;
+        }
+      }
+    });
+
     container.addEventListener('click', (e) => {
+      // Если это был свайп - не считаем как клик
+      if (isSwipeDetected) {
+        isSwipeDetected = false;
+        return;
+      }
+
       if (e.target === document.getElementById('hidden-trigger')) {
         openSettings();
         return;
@@ -778,14 +986,17 @@
 
       tapTimer = setTimeout(() => {
         if (tapCount === 1) {
+          // 1 ТАП: Паника! Мгновенно чернеет экран (0%)
           toggleStealthBlackout();
         } else if (tapCount === 2) {
+          // 2 ТАПА: Режим Always-On Display (часы)
           toggleFakeClock();
         } else if (tapCount >= 3) {
+          // 3 ТАПА: Меню настроек
           openSettings();
         }
         tapCount = 0;
-      }, 280);
+      }, 260);
     });
 
     fakeScreen.addEventListener('click', () => {
@@ -801,6 +1012,7 @@
       }
       isHidden = !isHidden;
       wordDisplay.style.opacity = isHidden ? '0' : '1';
+      heardMonitor.style.opacity = isHidden ? '0' : '1';
     }
 
     function toggleFakeClock() {
@@ -808,35 +1020,43 @@
       if (isFakeClock) {
         fakeScreen.style.display = 'flex';
         wordDisplay.style.opacity = '0';
+        heardMonitor.style.opacity = '0';
       } else {
         fakeScreen.style.display = 'none';
         wordDisplay.style.opacity = isHidden ? '0' : '1';
+        heardMonitor.style.opacity = isHidden ? '0' : '1';
       }
     }
 
     function openSettings() {
+      document.getElementById('setting-fontsize').value = config.fontSize;
+      document.getElementById('setting-brightness').value = config.brightness;
+      document.getElementById('setting-monitor').value = config.showMonitor ? 'on' : 'off';
+      document.getElementById('setting-translation').value = config.showTrans ? 'yes' : 'no';
+      document.getElementById('setting-history').value = config.historyCount;
+      document.getElementById('setting-lang').value = config.lang;
       settingsModal.style.display = 'flex';
     }
 
     document.getElementById('close-settings').addEventListener('click', () => {
       settingsModal.style.display = 'none';
     });
+
     document.getElementById('save-settings-btn').addEventListener('click', () => {
       config.fontSize = parseInt(document.getElementById('setting-fontsize').value);
       config.brightness = document.getElementById('setting-brightness').value;
-      config.position = document.getElementById('setting-position').value;
+      config.showMonitor = document.getElementById('setting-monitor').value === 'on';
       config.showTrans = document.getElementById('setting-translation').value === 'yes';
       config.historyCount = parseInt(document.getElementById('setting-history').value);
       
       const newLang = document.getElementById('setting-lang').value;
       if (newLang !== config.lang) {
         config.lang = newLang;
-        if (recognition) {
-          recognition.lang = config.lang;
-        }
+        safeRestartSpeech();
       }
 
       applyConfig();
+      saveConfig();
       settingsModal.style.display = 'none';
     });
 
@@ -847,7 +1067,7 @@
     });
 
     // ==============================================================
-    // ОТОБРАЖЕНИЕ АНГЛИЙСКОГО ОТВЕТА
+    // ОТОБРАЖЕНИЕ АНГЛИЙСКОГО ОТВЕТА (БЕЗ АВТОИСЧЕЗАНИЯ!)
     // ==============================================================
     function onWordDetected(item) {
       if (isHidden) return;
@@ -862,12 +1082,7 @@
         renderHistory();
       }
 
-      clearTimeout(fadeTimeout);
-      fadeTimeout = setTimeout(() => {
-        currentTermEl.style.color = '#171717';
-        currentTransEl.style.color = '#101010';
-      }, 15000);
-
+      // ТЕКСТ ТЕПЕРЬ НЕ ИСЧЕЗАЕТ ЧЕРЕЗ 15 СЕКУНД!
       const colors = BRIGHTNESS_MAP[config.brightness] || BRIGHTNESS_MAP['dim'];
       currentTermEl.style.color = colors.main;
       currentTransEl.style.color = colors.trans;
@@ -892,100 +1107,186 @@
     }
 
     // ==============================================================
-    // ДВИЖОК РАСПОЗНАВАНИЯ РЕЧИ (WEB SPEECH API)
+    // УСИЛЕННЫЙ ДВИЖОК РАСПОЗНАВАНИЯ РЕЧИ (WEB SPEECH + WATCHDOG)
     // ==============================================================
     let recognition = null;
     let isListening = false;
     let shouldBeListening = false;
+    let lastAudioTimestamp = Date.now();
 
-    function initSpeech() {
+    // Скользящий буфер распознанной речи (хранит последние 25 слов)
+    let rollingSpeechTokens = [];
+
+    function normalizeText(text) {
+      if (!text) return '';
+      return text.toLowerCase()
+                 .replace(/ё/g, 'е')
+                 .replace(/[^a-zA-Zа-яА-Я0-9\s\-]/g, ' ')
+                 .replace(/\s+/g, ' ')
+                 .trim();
+    }
+
+    function initSpeechEngine() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert("Браузер не поддерживает SpeechRecognition. Запустите в Google Chrome на Android.");
+        alert("Браузер не поддерживает SpeechRecognition. Используйте Google Chrome на Android.");
         return;
+      }
+
+      if (recognition) {
+        try {
+          recognition.onend = null;
+          recognition.onerror = null;
+          recognition.abort();
+        } catch(e) {}
       }
 
       recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = config.lang;
-      recognition.maxAlternatives = 3;
+      recognition.maxAlternatives = 4; // Проверяем до 4 вариантов от Google!
 
       recognition.onstart = () => {
         isListening = true;
+        lastAudioTimestamp = Date.now();
         micDot.className = 'listening';
         requestWakeLock();
+      };
+
+      recognition.onaudiostart = () => {
+        lastAudioTimestamp = Date.now();
+        micDot.classList.add('pulse');
+        setTimeout(() => micDot.classList.remove('pulse'), 300);
+      };
+
+      recognition.onspeechstart = () => {
+        lastAudioTimestamp = Date.now();
       };
 
       recognition.onend = () => {
         isListening = false;
         micDot.className = '';
         if (shouldBeListening) {
-          setTimeout(() => {
-            try { recognition.start(); } catch(e){}
-          }, 300);
+          // Немедленный безопасный перезапуск
+          setTimeout(safeRestartSpeech, 150);
         }
       };
 
       recognition.onerror = (event) => {
-        console.log("Speech Error:", event.error);
+        lastAudioTimestamp = Date.now();
         if (event.error === 'not-allowed') {
           micDot.className = 'error';
-          alert("Доступ к микрофону заблокирован. Разрешите микрофон в браузере!");
+          alert("Микрофон заблокирован. Разрешите микрофон в настройках браузера!");
+        } else if (event.error === 'no-speech') {
+          // В комнате просто тишина - это нормально, не показываем ошибку
+          if (shouldBeListening && !isListening) {
+            safeRestartSpeech();
+          }
         } else {
           micDot.className = 'error';
-          setTimeout(() => {
-            if (shouldBeListening && !isListening) {
-              try { recognition.start(); } catch(e){}
-            }
-          }, 1000);
+          setTimeout(safeRestartSpeech, 400);
         }
       };
 
       recognition.onresult = (event) => {
-        let fullTranscript = '';
+        lastAudioTimestamp = Date.now();
+        micDot.classList.add('pulse');
+        setTimeout(() => micDot.classList.remove('pulse'), 200);
+
+        let latestText = '';
+
+        // Проверяем ВСЕ альтернативы от Google
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          fullTranscript += ' ' + event.results[i][0].transcript;
+          const res = event.results[i];
+          for (let k = 0; k < res.length; ++k) {
+            const altText = res[k].transcript;
+            if (altText) {
+              if (k === 0) latestText += ' ' + altText;
+              processTranscriptCandidate(altText);
+            }
+          }
         }
-        analyzeSpokenText(fullTranscript);
+
+        if (latestText.trim()) {
+          updateRollingBuffer(latestText);
+          if (config.showMonitor) {
+            heardMonitor.textContent = latestText.trim();
+          }
+        }
       };
     }
 
+    function safeRestartSpeech() {
+      if (!shouldBeListening) return;
+      try {
+        if (!recognition) {
+          initSpeechEngine();
+        }
+        recognition.start();
+      } catch (e) {
+        // Если объект залип в переходном состоянии - пересоздаем его начисто
+        try {
+          initSpeechEngine();
+          recognition.start();
+        } catch(err) {}
+      }
+    }
+
+    // Сторожевой таймер (Watchdog) - проверяет каждые 1.5 секунды, что микрофон реально жив
+    setInterval(() => {
+      if (shouldBeListening) {
+        const timeSinceAudio = Date.now() - lastAudioTimestamp;
+        if (!isListening || timeSinceAudio > 8000) {
+          safeRestartSpeech();
+          lastAudioTimestamp = Date.now();
+        }
+      }
+    }, 1500);
+
     // ==============================================================
-    // УМНЫЙ АНАЛИЗАТОР РЕЧИ (ГИБКИЙ МАТЧИНГ ДЛИННЫХ ФРАЗ И КОРНЕЙ)
+    // СКОЛЬЗЯЩИЙ БУФЕР И ПРИОРИТЕТНОЕ СОПОСТАВЛЕНИЕ
     // ==============================================================
+    function updateRollingBuffer(newChunk) {
+      const words = normalizeText(newChunk).split(/\s+/).filter(w => w.length > 0);
+      rollingSpeechTokens.push(...words);
+      if (rollingSpeechTokens.length > 35) {
+        rollingSpeechTokens = rollingSpeechTokens.slice(-35);
+      }
+      // Проверяем также объединенный текст последних секунд
+      const fullRollingText = rollingSpeechTokens.join(' ');
+      checkAgainstVocabulary(fullRollingText);
+    }
+
+    function processTranscriptCandidate(rawText) {
+      const clean = normalizeText(rawText);
+      checkAgainstVocabulary(clean);
+    }
+
     let lastMatchedTerm = '';
     let lastMatchTime = 0;
 
-    function normalizeText(text) {
-      return text.toLowerCase()
-                 .replace(/ё/g, 'е')
-                 .replace(/[^a-zA-Zа-яА-Я0-9\s\-]/g, ' ')
-                 .replace(/\s+/g, ' ');
-    }
-
-    function analyzeSpokenText(rawText) {
-      if (!rawText || rawText.trim().length === 0) return;
-      const cleanText = normalizeText(rawText);
+    function checkAgainstVocabulary(speechText) {
+      if (!speechText || speechText.length < 2) return;
 
       for (const item of VOCABULARY) {
-        // 1. Проверяем русские правила
+        // 1. Проверяем русские корни
         if (item.ruRules && item.ruRules.length > 0) {
           for (const rule of item.ruRules) {
-            // rule - это массив обязательных корней, например: ["специалист", "поддержк"]
-            const allMatched = rule.every(stem => cleanText.includes(normalizeText(stem).trim()));
-            if (allMatched) {
+            // rule - массив корней, все корни должны присутствовать в речи
+            const allFound = rule.every(stem => speechText.includes(normalizeText(stem)));
+            if (allFound) {
               triggerMatch(item);
               return;
             }
           }
         }
 
-        // 2. Проверяем английские фразы (на случай, если учитель спросит на англ.)
+        // 2. Проверяем английские фразы
         if (item.enRules && item.enRules.length > 0) {
           for (const enPhrase of item.enRules) {
             const regex = new RegExp('\\b' + enPhrase.toLowerCase().replace('-', '[\\s\\-]') + '\\b', 'i');
-            if (regex.test(cleanText)) {
+            if (regex.test(speechText)) {
               triggerMatch(item);
               return;
             }
@@ -996,14 +1297,18 @@
 
     function triggerMatch(item) {
       const now = Date.now();
-      if (item.term !== lastMatchedTerm || now - lastMatchTime > 4000) {
+      if (item.term !== lastMatchedTerm || now - lastMatchTime > 3500) {
         lastMatchedTerm = item.term;
         lastMatchTime = now;
         onWordDetected(item);
+        // Слегка подчищаем буфер, чтобы не сработало дважды подряд
+        rollingSpeechTokens = [];
       }
     }
 
-    // Полноэкранный режим
+    // ==============================================================
+    // АКТИВАЦИЯ И ПОЛНЫЙ ЭКРАН
+    // ==============================================================
     function enterFullscreen() {
       const el = document.documentElement;
       if (el.requestFullscreen) {
@@ -1013,40 +1318,37 @@
       }
     }
 
-    // Service Worker для PWA
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
-    // Старт
-    startBtn.addEventListener('click', () => {
+    startBtn.addEventListener('click', async () => {
       startOverlay.style.display = 'none';
       shouldBeListening = true;
       enterFullscreen();
-      initSpeech();
+
+      // Разогреваем аудио поток через getUserMedia (держит микрофон активным)
       try {
-        recognition.start();
-      } catch (e) {
-        console.log(e);
-      }
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+      } catch(e) {}
+
+      initSpeechEngine();
+      safeRestartSpeech();
       applyConfig();
       requestWakeLock();
-    });
-
-    container.addEventListener('touchend', () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        enterFullscreen();
-      }
     });
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && shouldBeListening) {
         requestWakeLock();
-        if (!isListening && recognition) {
-          try { recognition.start(); } catch(e){}
-        }
+        safeRestartSpeech();
       }
     });
+
+    // Инициализация при загрузке
+    applyConfig();
 
   </script>
 </body>
